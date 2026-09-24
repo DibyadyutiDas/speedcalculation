@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SpeedBanker — Mental Math & Speed Calculation Engine for Bank Exams</title>
+  <meta name="description"
+    content="Master rapid calculation, Vedic math shortcuts, squares, cubes, tables, fraction-to-percentage and bank exam simplifications for SBI PO/Clerk, IBPS PO, RRB & RBI.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="theme-light">
+  <div id="app" class="app-container">
+    <!-- Top Navigation Header -->
+    <header class="app-header">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round">
+            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+            <line x1="8" y1="21" x2="16" y2="21"></line>
+            <line x1="12" y1="17" x2="12" y2="21"></line>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>SpeedBanker</h1>
+          <span class="sub-badge">Bank Exam Quantitative Engine</span>
+        </div>
+      </div>
+
+      <nav class="nav-tabs" role="tablist">
+        <button class="nav-tab active" data-tab="shortcuts" id="tab-shortcuts-btn" title="Step 1: Learn Vedic Shortcuts">
+          <span class="step-num">1</span>
+          <span class="tab-label">Vedic Shortcuts</span>
+        </button>
+        <button class="nav-tab" data-tab="tables" id="tab-tables-btn" title="Step 2: Memorize Tables & Charts">
+          <span class="step-num">2</span>
+          <span class="tab-label">Tables &amp; Charts</span>
+        </button>
+        <button class="nav-tab" data-tab="arena" id="tab-arena-btn" title="Step 3: Speed Arena Drills">
+          <span class="step-num">3</span>
+          <span class="tab-label">Speed Arena</span>
+        </button>
+        <button class="nav-tab" data-tab="flash" id="tab-flash-btn" title="Step 4: Flash Reflex Math">
+          <span class="step-num">4</span>
+          <span class="tab-label">Flash Math</span>
+        </button>
+        <button class="nav-tab" data-tab="exam" id="tab-exam-btn" title="Step 5: 15-Question Bank Speed Mock">
+          <span class="step-num">5</span>
+          <span class="tab-label">Bank Mock</span>
+        </button>
+        <button class="nav-tab" data-tab="analytics" id="tab-analytics-btn" title="Step 6: Score Diagnostics & History">
+          <span class="step-num">6</span>
+          <span class="tab-label">Performance</span>
+        </button>
+      </nav>
+
+      <div class="header-controls">
+        <button id="theme-toggle-btn" class="icon-btn" title="Toggle Dark/Light Mode" aria-label="Toggle Theme">
+          🌓
+        </button>
+        <button id="hotkeys-btn" class="icon-btn" title="Keyboard Shortcuts (?)" aria-label="Help">
+          ⌨️
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+
+      <!-- ================= TAB 3: SPEED ARENA ================= -->
+      <section id="tab-arena" class="tab-pane">
+        <!-- Configuration Bar -->
+        <!-- Modernized Arena Configuration Studio -->
+        <div class="arena-config-bar glass-panel">
+          <div class="config-top-header">
+            <div class="config-title-wrap">
+              <div class="config-accent-icon">⚡</div>
+              <div>
+                <h3 class="config-title">Workout Configuration</h3>
+                <p class="config-subtitle">Tailor your mathematical operation, exam difficulty, and training speed</p>
+              </div>
+            </div>
+            <div class="config-actions">
+              <button id="start-arena-btn" class="btn btn-primary">
+                <span class="btn-icon">▶</span> START DRILL
+                <kbd class="key-hint">Enter</kbd>
+              </button>
+              <button id="reset-arena-btn" class="btn btn-secondary" style="display:none;">
+                ⏹ End Session
+              </button>
+            </div>
+          </div>
+
+          <div class="config-main-grid">
+            <!-- 1. Target Category Card -->
+            <div class="config-item-card category-card">
+              <div class="config-item-header">
+                <span class="config-item-label">Target Operation</span>
+                <span class="config-item-badge" id="category-badge-hint">Foundations</span>
+              </div>
+              <div class="select-wrapper modern-select-wrap">
+                <select id="module-select">
+                  <optgroup label="Essential Bank Foundations">
+                    <option value="multiplication" selected>✖️ Multiplication (2×2, 3×2, 3×3)</option>
+                    <option value="tables">🔢 Speed Tables (12 to 30)</option>
+                    <option value="addition">➕ Rapid Addition (2 & 3 Digit)</option>
+                    <option value="subtraction">➖ Fast Subtraction & Complements</option>
+                    <option value="division">➗ Quick Division & Quotients</option>
+                  </optgroup>
+                  <optgroup label="Powers, Roots & Percentages">
+                    <option value="squares">² Squares (1 to 50 & 51 to 125)</option>
+                    <option value="square_roots">√ Square Roots (Instant Extraction)</option>
+                    <option value="cubes">³ Cubes (1 to 30)</option>
+                    <option value="cube_roots">∛ Cube Roots (Vedic Unit Trick)</option>
+                    <option value="fractions_pct">% Fraction to % Reciprocals (1/2 to 1/25)</option>
+                  </optgroup>
+                  <optgroup label="Bank Exam Real Drills">
+                    <option value="simplification">📝 Simplification (BODMAS Speed Drill)</option>
+                    <option value="approximation">≈ Approximation (Nearest Integer Drill)</option>
+                    <option value="series">🔢 Missing & Wrong Number Series</option>
+                    <option value="all_mixed">🔥 Mixed Comprehensive Bank Drill</option>
+                  </optgroup>
+                </select>
+                <span class="select-custom-arrow">▾</span>
+              </div>
+            </div>
+
+            <!-- 2. Modern Segmented Difficulty Control -->
+            <div class="config-item-card difficulty-card">
+              <div class="config-item-header">
+                <span class="config-item-label">Exam Difficulty</span>
+                <span class="config-item-badge diff-badge" id="diff-badge-indicator">PO Prelims Level</span>
+              </div>
+              <!-- Hidden select for form/JS syncing -->
+              <select id="difficulty-select" style="display:none;">
+                <option value="clerk">Clerk Prelims (Easy-Moderate)</option>
+                <option value="po" selected>PO Prelims (Standard Bank Level)</option>
+                <option value="mains">PO Mains & RBI Grade B (Pro Speed)</option>
+              </select>
+              <!-- Sleek Interactive Segmented Buttons -->
+              <div class="segmented-control" id="difficulty-segmented">
+                <button type="button" class="segmented-btn" data-value="clerk">
+                  <span class="seg-dot clerk"></span>
+                  <span class="seg-text">Clerk Prelims</span>
+                </button>
+                <button type="button" class="segmented-btn active" data-value="po">
+                  <span class="seg-dot po"></span>
+                  <span class="seg-text">PO Prelims</span>
+                </button>
+                <button type="button" class="segmented-btn" data-value="mains">
+                  <span class="seg-dot mains"></span>
+                  <span class="seg-text">Mains & RBI</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- 3. Modern Workout Mode Chips -->
+            <div class="config-item-card mode-card">
+              <div class="config-item-header">
+                <span class="config-item-label">Workout Mode</span>
+                <span class="config-item-badge mode-badge" id="mode-badge-indicator">60s Sprint</span>
+              </div>
+              <!-- Hidden select for form/JS syncing -->
+              <select id="mode-select" style="display:none;">
+                <option value="time-60" selected>⚡ 60-Second Sprint</option>
+                <option value="time-120">⏱️ 2-Minute Blitz</option>
+                <option value="time-300">⏱️ 5-Minute Marathon</option>
+                <option value="streak">🔥 Sudden Death Streak (1 Life)</option>
+                <option value="target-25">🎯 25 Questions Time-Trial</option>
+                <option value="zen">🧘 Endless Practice (No Timer)</option>
+              </select>
+              <!-- Interactive Mode Chips Grid -->
+              <div class="mode-chips-grid" id="mode-chips">
+                <button type="button" class="mode-chip-btn active" data-value="time-60"
+                  title="Solve as many as possible in 60 seconds">
+                  <span class="chip-icon">⚡</span>
+                  <span class="chip-title">60s Sprint</span>
+                </button>
+                <button type="button" class="mode-chip-btn" data-value="time-120" title="2 minutes calculation blitz">
+                  <span class="chip-icon">⏱️</span>
+                  <span class="chip-title">2m Blitz</span>
+                </button>
+                <button type="button" class="mode-chip-btn" data-value="time-300"
+                  title="5 minutes sustained stamina training">
+                  <span class="chip-icon">⏱️</span>
+                  <span class="chip-title">5m Marathon</span>
+                </button>
+                <button type="button" class="mode-chip-btn" data-value="streak"
+                  title="1 Life! Sudden death on first mistake">
+                  <span class="chip-icon">🔥</span>
+                  <span class="chip-title">1 Life Streak</span>
+                </button>
+                <button type="button" class="mode-chip-btn" data-value="target-25"
+                  title="Race against time to solve 25 questions">
+                  <span class="chip-icon">🎯</span>
+                  <span class="chip-title">25 Questions</span>
+                </button>
+                <button type="button" class="mode-chip-btn" data-value="zen"
+                  title="Endless practice without timer pressure">
+                  <span class="chip-icon">🧘</span>
+                  <span class="chip-title">Zen Mode</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Status Bar (Timer, Score, Streak, Speed CPM) -->
+        <div class="live-hud glass-panel" id="live-hud">
+          <div class="hud-item" id="hud-timer-container">
+            <div class="hud-label">TIME REMAINING</div>
+            <div class="hud-value" id="hud-timer">60.0<span class="hud-unit">s</span></div>
+            <div class="hud-progress-bar">
+              <div id="timer-bar-fill"></div>
+            </div>
+          </div>
+          <div class="hud-item">
+            <div class="hud-label">SOLVED / TARGET</div>
+            <div class="hud-value"><span id="hud-solved">0</span><span class="hud-unit" id="hud-target-denom"></span>
+            </div>
+          </div>
+          <div class="hud-item">
+            <div class="hud-label">CURRENT SPEED</div>
+            <div class="hud-value"><span id="hud-cpm">0</span> <span class="hud-unit">CPM</span></div>
+          </div>
+          <div class="hud-item">
+            <div class="hud-label">ACCURACY</div>
+            <div class="hud-value"><span id="hud-acc">100</span><span class="hud-unit">%</span></div>
+          </div>
+          <div class="hud-item" id="hud-streak-container">
+            <div class="hud-label">STREAK</div>
+            <div class="hud-value streak-value"><span id="hud-streak">0</span></div>
+          </div>
+        </div>
+
+        <!-- Question Workout Box -->
+        <div class="arena-workout-container" id="workout-container">
+          <!-- Idle / Start Splash Screen -->
+          <div class="arena-splash" id="arena-splash">
+            <div class="splash-badge">BANK EXAM SPEED BOOSTER</div>
+            <h2>Sharpen Your Mental Calculation Reflexes</h2>
+            <p>Quantitative Aptitude in SBI & IBPS gives only <strong>20 minutes for 35 questions</strong>. Doing raw
+              calculations in your head saves 6–8 precious minutes!</p>
+
+            <div class="quick-preset-chips">
+              <button class="preset-chip" data-module="multiplication" data-diff="po">2×2 Multiplication</button>
+              <button class="preset-chip" data-module="tables" data-diff="clerk">Tables 12-25</button>
+              <button class="preset-chip" data-module="squares" data-diff="po">Squares 1-50</button>
+              <button class="preset-chip" data-module="fractions_pct" data-diff="po">Fractions to %</button>
+              <button class="preset-chip" data-module="simplification" data-diff="po">BODMAS Simplification</button>
+            </div>
+
+            <button id="splash-start-btn" class="btn btn-primary btn-large">
+              <span>⚡ Start Calculation Drill</span>
+              <kbd class="key-hint">Space / Enter</kbd>
+            </button>
+          </div>
+
+          <!-- Active Question Card -->
+          <div class="question-card glass-panel" id="question-card" style="display: none;">
+            <div class="question-meta">
+              <span class="tag-category" id="q-category-tag">Multiplication</span>
+              <span class="tag-difficulty" id="q-difficulty-tag">PO Level</span>
+              <button class="hint-trigger-btn" id="q-hint-btn" title="View Vedic Shortcut Tip">💡 Shortcut Tip</button>
+            </div>
+
+            <!-- Hint Popover -->
+            <div class="shortcut-tip-box" id="shortcut-tip-box" style="display: none;">
+              <span class="tip-close-btn" id="tip-close-btn">&times;</span>
+              <div class="tip-header">⚡ Vedic Shortcut for this pattern:</div>
+              <div class="tip-body" id="shortcut-tip-content"></div>
+            </div>
+
+            <div class="question-display" id="question-display">
+              <span class="q-expression" id="q-expression">47 × 38 = ?</span>
+            </div>
+
+            <!-- Single Input Box or MCQ Options -->
+            <div class="input-interaction-area">
+              <form id="answer-form" autocomplete="off" onsubmit="return false;">
+                <div class="answer-input-wrapper" id="answer-input-wrapper">
+                  <input type="text" id="answer-input" inputmode="numeric" placeholder="Type answer & press Enter"
+                    autofocus>
+                  <button type="submit" id="submit-answer-btn" class="btn-submit">
+                    <span>↵</span>
+                  </button>
+                </div>
+              </form>
+
+              <!-- For Simplification / MCQ mode with 5 Bank Exam Options (A, B, C, D, E) -->
+              <div class="mcq-options-grid" id="mcq-options-grid" style="display: none;">
+                <!-- Generated dynamically -->
+              </div>
+            </div>
+
+            <!-- Micro Feedback Flash (CORRECT / WRONG + EXP) -->
+            <div class="feedback-banner" id="feedback-banner"></div>
+
+            <!-- On-screen Virtual Keypad for touch / rapid mouse clicking -->
+            <div class="virtual-keypad" id="virtual-keypad">
+              <button class="key-btn" data-key="7">7</button>
+              <button class="key-btn" data-key="8">8</button>
+              <button class="key-btn" data-key="9">9</button>
+              <button class="key-btn key-action" data-key="backspace">⌫</button>
+              <button class="key-btn" data-key="4">4</button>
+              <button class="key-btn" data-key="5">5</button>
+              <button class="key-btn" data-key="6">6</button>
+              <button class="key-btn key-action" data-key="clear">C</button>
+              <button class="key-btn" data-key="1">1</button>
+              <button class="key-btn" data-key="2">2</button>
+              <button class="key-btn" data-key="3">3</button>
+              <button class="key-btn key-enter" data-key="enter">ENTER</button>
+              <button class="key-btn" data-key="0">0</button>
+              <button class="key-btn" data-key=".">.</button>
+              <button class="key-btn" data-key="-">-</button>
+            </div>
+          </div>
+
+          <!-- Session Summary Modal / Card -->
+          <div class="session-summary-card glass-panel" id="session-summary-card" style="display: none;">
+            <div class="summary-header">
+              <div class="badge-ribbon" id="summary-grade-badge">EXCELLENT SPEED</div>
+              <h2>Drill Session Complete!</h2>
+              <p class="summary-subtitle" id="summary-subtitle">Here is your speed breakdown for this round</p>
+            </div>
+
+            <div class="summary-stats-grid">
+              <div class="summary-stat-box">
+                <span class="stat-num" id="sum-cpm">42.5</span>
+                <span class="stat-desc">Calculations / Min (CPM)</span>
+              </div>
+              <div class="summary-stat-box">
+                <span class="stat-num" id="sum-acc">94%</span>
+                <span class="stat-desc">Accuracy</span>
+              </div>
+              <div class="summary-stat-box">
+                <span class="stat-num" id="sum-time-avg">1.4s</span>
+                <span class="stat-desc">Avg Time / Question</span>
+              </div>
+              <div class="summary-stat-box">
+                <span class="stat-num" id="sum-max-streak">18</span>
+                <span class="stat-desc">Max Combo Streak</span>
+              </div>
+            </div>
+
+            <!-- Speed Rating Comparison -->
+            <div class="bank-benchmark-box">
+              <div class="benchmark-title">Bank Exam Competitiveness Benchmark:</div>
+              <div class="benchmark-bar">
+                <div class="benchmark-fill" id="benchmark-fill" style="width: 75%;"></div>
+                <div class="benchmark-marker" style="left: 45%;">Clerk Prelims</div>
+                <div class="benchmark-marker" style="left: 70%;">PO Prelims</div>
+                <div class="benchmark-marker" style="left: 90%;">Top 1% Topper</div>
+              </div>
+              <p class="benchmark-feedback" id="benchmark-feedback">Your speed is ready for SBI PO Prelims cutoffs!</p>
+            </div>
+
+            <!-- Deep Score Analysis & Diagnostics Card -->
+            <div class="score-analysis-box glass-panel">
+              <div class="analysis-section-title">
+                <span class="icon">🔬</span> Comprehensive Score & Speed Diagnostic
+              </div>
+
+              <div class="analysis-metrics-grid">
+                <!-- Score Delta vs Previous Session -->
+                <div class="analysis-metric-card">
+                  <div class="metric-top">
+                    <span class="metric-name">Vs Previous Drill</span>
+                    <span class="metric-icon" id="ana-delta-icon">📈</span>
+                  </div>
+                  <div class="metric-value-large" id="ana-cpm-delta">+0 CPM</div>
+                  <div class="metric-sub" id="ana-delta-sub">Comparing with last attempt</div>
+                </div>
+
+                <!-- Speed-Accuracy Index -->
+                <div class="analysis-metric-card">
+                  <div class="metric-top">
+                    <span class="metric-name">Speed-Accuracy Index</span>
+                    <span class="metric-icon">🎯</span>
+                  </div>
+                  <div class="metric-value-large" id="ana-efficiency-score">--<span class="metric-unit">/100</span>
+                  </div>
+                  <div class="metric-sub" id="ana-efficiency-sub">Balanced performance</div>
+                </div>
+
+                <!-- Pace Consistency -->
+                <div class="analysis-metric-card">
+                  <div class="metric-top">
+                    <span class="metric-name">Pace Consistency</span>
+                    <span class="metric-icon">⏱️</span>
+                  </div>
+                  <div class="metric-value-large"><span id="ana-fastest-time">--s</span> / <span
+                      id="ana-slowest-time">--s</span></div>
+                  <div class="metric-sub">Fastest vs Slowest Question</div>
+                </div>
+
+                <!-- Bank Exam Readiness -->
+                <div class="analysis-metric-card">
+                  <div class="metric-top">
+                    <span class="metric-name">SBI PO Prelims Gap</span>
+                    <span class="metric-icon">🏛️</span>
+                  </div>
+                  <div class="metric-value-large" id="ana-cutoff-gap">At Target</div>
+                  <div class="metric-sub" id="ana-cutoff-sub">Target: 35+ CPM for 35 Qs</div>
+                </div>
+              </div>
+
+              <!-- Tailored Diagnostic Recommendation -->
+              <div class="diagnostic-action-plan" id="diagnostic-action-plan">
+                <div class="plan-header">💡 Speed Diagnostic Insight:</div>
+                <div class="plan-body" id="diagnostic-plan-body">Analyzing your performance...</div>
+              </div>
+            </div>
+
+            <!-- Mistakes Review List -->
+            <div class="mistakes-review-area" id="mistakes-review-area">
+              <h3>Mistake Analysis (<span id="mistake-count">0</span>)</h3>
+              <div class="mistakes-list" id="mistakes-list">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+
+            <div class="summary-actions">
+              <button id="summary-retry-btn" class="btn btn-primary">
+                ⚡ Try Again (Enter)
+              </button>
+              <button id="summary-review-tricks-btn" class="btn btn-secondary">
+                🧠 Learn Faster Vedic Method
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Previous Score Tracker & Live Speed History -->
+        <div class="previous-score-tracker glass-panel" id="previous-score-tracker">
+          <div class="tracker-header">
+            <div class="tracker-title-wrap">
+              <span class="tracker-badge">📈 RECENT DRILLS HISTORY</span>
+              <h3>Previous Score Track & Progression</h3>
+            </div>
+            <div class="tracker-quick-stats">
+              <div class="quick-stat-pill">
+                <span class="stat-pill-label">Last Score:</span>
+                <span class="stat-pill-val" id="prev-score-val">-- CPM</span>
+              </div>
+              <div class="quick-stat-pill delta-pill" id="score-delta-pill">
+                <span class="stat-pill-label">Trend:</span>
+                <span class="stat-pill-val" id="score-trend-val">No prior session</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Visual Performance Sparkline / Trend Bars -->
+          <div class="trend-visualizer-container">
+            <div class="trend-meta">
+              <span class="trend-title">Recent Drill Speed Trend (Last 8 Sessions)</span>
+              <span class="trend-target">Target: 42+ CPM (SBI PO Cutoff)</span>
+            </div>
+            <div class="trend-bars-wrapper" id="trend-bars-wrapper">
+              <!-- Dynamically populated vertical bars -->
+            </div>
+          </div>
+
+          <!-- Previous Attempts Comparison Table -->
+          <div class="previous-attempts-table-wrap">
+            <table class="mini-attempts-table" id="previous-attempts-table">
+              <thead>
+                <tr>
+                  <th>Attempt Time</th>
+                  <th>Operation</th>
+                  <th>Difficulty</th>
+                  <th>Score (CPM)</th>
+                  <th>Accuracy</th>
+                  <th>Vs Previous</th>
+                </tr>
+              </thead>
+              <tbody id="previous-attempts-tbody">
+                <tr>
+                  <td colspan="6" class="text-muted"
+                    style="text-align: center; padding: 1.5rem; color: var(--text-muted);">Complete your first drill to
+                    start tracking session-by-session score progression!</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Step 3 Navigation Footer -->
+        <div class="step-flow-footer">
+          <div class="step-flow-info">
+            <span class="step-flow-label">Step 3 of 6 • Speed Drills</span>
+            <span class="step-flow-title">Sharpened arithmetic? Train subconscious visual speed with Flash Math</span>
+          </div>
+          <div class="step-flow-buttons">
+            <button class="btn btn-secondary" onclick="switchTab('tables')">← Step 2: Tables &amp; Charts</button>
+            <button class="btn btn-primary" onclick="switchTab('flash')">Proceed to Step 4: Flash Math →</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB 2: FLASH CALCULATION (Vedic/Abacus Mental Addition) ================= -->
+      <section id="tab-flash" class="tab-pane">
+        <div class="flash-arena glass-panel">
+          <div class="flash-header">
+            <h2>👁️ Flash Rapid Mental Addition Drill</h2>
+            <p>Numbers flash consecutively on the screen at high speed. Keep adding them in your mind and enter the
+              final sum. This activates true sub-conscious calculation speed!</p>
+          </div>
+
+          <div class="flash-settings-row">
+            <div class="config-group">
+              <label>Number of Rows:</label>
+              <select id="flash-rows-select">
+                <option value="4">4 Numbers</option>
+                <option value="6" selected>6 Numbers</option>
+                <option value="8">8 Numbers</option>
+                <option value="10">10 Numbers (Pro)</option>
+              </select>
+            </div>
+            <div class="config-group">
+              <label>Digits per Number:</label>
+              <select id="flash-digits-select">
+                <option value="1">Single Digit (e.g. 7, 4, 9)</option>
+                <option value="2" selected>2 Digits (e.g. 34, 58, 72)</option>
+                <option value="3">3 Digits (e.g. 245, 680)</option>
+              </select>
+            </div>
+            <div class="config-group">
+              <label>Flash Duration:</label>
+              <select id="flash-speed-select">
+                <option value="1200">Slow (1.2s per number)</option>
+                <option value="800" selected>Normal (0.8s per number)</option>
+                <option value="500">Fast (0.5s per number)</option>
+                <option value="350">Blazing (0.35s per number)</option>
+              </select>
+            </div>
+            <button id="start-flash-btn" class="btn btn-primary">⚡ Start Flash Sequence</button>
+          </div>
+
+          <div class="flash-display-box" id="flash-display-box">
+            <div class="flash-count-indicator" id="flash-count-indicator">Ready</div>
+            <div class="flash-number" id="flash-number">READY?</div>
+          </div>
+
+          <div class="flash-input-box" id="flash-input-box" style="display:none;">
+            <label for="flash-answer-input">What was the total sum?</label>
+            <div class="flash-input-row">
+              <input type="number" id="flash-answer-input" placeholder="Enter sum" autofocus>
+              <button id="flash-submit-btn" class="btn btn-primary">Check Sum</button>
+            </div>
+            <div class="flash-solution-breakdown" id="flash-solution-breakdown"></div>
+          </div>
+        </div>
+
+        <!-- Step 4 Navigation Footer -->
+        <div class="step-flow-footer">
+          <div class="step-flow-info">
+            <span class="step-flow-label">Step 4 of 6 • Reflex Conditioning</span>
+            <span class="step-flow-title">Reflexes tuned? Take the 15-question authentic Bank Speed Mock!</span>
+          </div>
+          <div class="step-flow-buttons">
+            <button class="btn btn-secondary" onclick="switchTab('arena')">← Step 3: Speed Arena</button>
+            <button class="btn btn-primary" onclick="switchTab('exam')">Proceed to Step 5: Bank Mock →</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB 5: BANK EXAM MOCK SIMULATOR ================= -->
+      <section id="tab-exam" class="tab-pane">
+        <div class="exam-wrapper glass-panel">
+          <div class="exam-top-strip">
+            <div class="exam-title-badge">
+              <span class="exam-logo">🏛️</span>
+              <div>
+                <strong>SBI / IBPS PO PRELIMS QUANT SPEED ROUND</strong>
+                <div class="exam-sub">Simplification, Approximation & Number Series Section</div>
+              </div>
+            </div>
+            <div class="exam-timer-box">
+              <span class="timer-label">Time Left:</span>
+              <span class="exam-clock" id="exam-clock">10:00</span>
+            </div>
+            <button id="exam-submit-final-btn" class="btn btn-danger btn-sm" style="display:none;">Submit Test</button>
+          </div>
+
+          <div class="exam-welcome" id="exam-welcome">
+            <div class="welcome-card">
+              <h3>Real Exam Environment Simulation</h3>
+              <ul>
+                <li>Contains <strong>15 Authentic Bank Questions</strong> (Simplifications, Surds & Indices,
+                  Percentages, Squares/Cubes, Missing Number Series).</li>
+                <li>Each question carries <strong>1 Mark</strong>; negative marking of <strong>0.25 Marks</strong> for
+                  wrong answers.</li>
+                <li>Simulates the real TCS iON pattern with 5 Options, Question Palette (Answered, Not Answered, Marked
+                  for Review).</li>
+              </ul>
+              <button id="start-exam-btn" class="btn btn-primary btn-large">🚀 Launch 15-Question Speed Mock</button>
+            </div>
+          </div>
+
+          <div class="exam-interface-grid" id="exam-interface" style="display:none;">
+            <!-- Left: Question Area -->
+            <div class="exam-question-area">
+              <div class="exam-q-header">
+                <span class="q-num-badge" id="exam-q-num">Question No. 1</span>
+                <span class="q-marks-badge">+1.0 / -0.25</span>
+              </div>
+              <div class="exam-q-content" id="exam-q-content">
+                <!-- Expression -->
+              </div>
+              <div class="exam-options-container" id="exam-options-container">
+                <!-- 5 radio/styled options -->
+              </div>
+              <div class="exam-footer-controls">
+                <button id="exam-prev-btn" class="btn btn-secondary">← Previous</button>
+                <button id="exam-clear-btn" class="btn btn-outline">Clear Response</button>
+                <button id="exam-mark-btn" class="btn btn-secondary">Mark for Review &amp; Next</button>
+                <button id="exam-save-next-btn" class="btn btn-primary">Save &amp; Next →</button>
+              </div>
+            </div>
+
+            <!-- Right: Question Palette -->
+            <div class="exam-palette-sidebar">
+              <div class="palette-legend">
+                <div class="legend-item"><span class="legend-dot answered"></span> Answered</div>
+                <div class="legend-item"><span class="legend-dot not-answered"></span> Not Answered</div>
+                <div class="legend-item"><span class="legend-dot marked"></span> Marked for Review</div>
+                <div class="legend-item"><span class="legend-dot not-visited"></span> Not Visited</div>
+              </div>
+              <div class="palette-grid" id="exam-palette-grid">
+                <!-- 1 to 15 buttons -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Exam Result Report -->
+          <div class="exam-result-report" id="exam-result-report" style="display:none;">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+
+        <!-- Step 5 Navigation Footer -->
+        <div class="step-flow-footer">
+          <div class="step-flow-info">
+            <span class="step-flow-label">Step 5 of 6 • Exam Simulation</span>
+            <span class="step-flow-title">Exam completed? Analyze your speed, accuracy &amp; past score progression</span>
+          </div>
+          <div class="step-flow-buttons">
+            <button class="btn btn-secondary" onclick="switchTab('flash')">← Step 4: Flash Math</button>
+            <button class="btn btn-primary" onclick="switchTab('analytics')">Proceed to Step 6: Performance →</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB 1: VEDIC TRICKS & SHORTCUTS ================= -->
+      <section id="tab-shortcuts" class="tab-pane active">
+        <div class="shortcuts-container">
+          <div class="shortcuts-intro glass-panel">
+            <h2>🧠 High-Yield Mental Math Tricks for Bank Exams</h2>
+            <p>Every topper in SBI/IBPS uses these exact mental algorithms to calculate 3x faster without touching pen
+              or paper. Click any technique below to practice in the live sandbox!</p>
+          </div>
+
+          <div class="shortcuts-grid" id="shortcuts-grid">
+            <!-- Dynamically populated with interactive trick cards -->
+          </div>
+
+          <!-- Step 1 Navigation Footer -->
+          <div class="step-flow-footer">
+            <div class="step-flow-info">
+              <span class="step-flow-label">Step 1 of 6 • Foundations</span>
+              <span class="step-flow-title">Done with Shortcuts? Test your memory with Tables &amp; Reciprocals</span>
+            </div>
+            <div class="step-flow-buttons">
+              <button class="btn btn-primary" onclick="switchTab('tables')">Proceed to Step 2: Tables &amp; Charts →</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB 2: TABLES & % CHARTS ================= -->
+      <section id="tab-tables" class="tab-pane">
+        <div class="charts-container">
+          <div class="charts-nav-tabs">
+            <button class="chart-tab-btn active" data-chart="fraction-pct">Fraction to % Reciprocals (Must
+              Know)</button>
+            <button class="chart-tab-btn" data-chart="squares-chart">Squares (1 to 100)</button>
+            <button class="chart-tab-btn" data-chart="cubes-chart">Cubes (1 to 30)</button>
+            <button class="chart-tab-btn" data-chart="tables-chart">Multiplication Tables (12 to 30)</button>
+          </div>
+
+          <div class="chart-content-area glass-panel" id="chart-content-area">
+            <!-- Content swapped dynamically -->
+          </div>
+
+          <!-- Step 2 Navigation Footer -->
+          <div class="step-flow-footer">
+            <div class="step-flow-info">
+              <span class="step-flow-label">Step 2 of 6 • Core Memorization</span>
+              <span class="step-flow-title">Foundations memorized? Enter the live timed Speed Arena!</span>
+            </div>
+            <div class="step-flow-buttons">
+              <button class="btn btn-secondary" onclick="switchTab('shortcuts')">← Step 1: Shortcuts</button>
+              <button class="btn btn-primary" onclick="switchTab('arena')">Proceed to Step 3: Speed Arena →</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB 6: PERFORMANCE ANALYTICS ================= -->
+      <section id="tab-analytics" class="tab-pane">
+        <div class="analytics-container">
+          <div class="analytics-header glass-panel">
+            <h2>📈 Your Speed & Accuracy Dashboard</h2>
+            <p>Detailed tracking of all your training sessions. Identify bottlenecks in addition, division, squares or
+              simplification.</p>
+            <div class="analytics-actions">
+              <button id="export-stats-btn" class="btn btn-outline btn-sm">Export Data</button>
+              <button id="clear-stats-btn" class="btn btn-danger btn-sm">Reset History</button>
+            </div>
+          </div>
+
+          <div class="kpi-cards-grid">
+            <div class="kpi-card glass-panel">
+              <div class="kpi-icon">⚡</div>
+              <div class="kpi-val" id="kpi-best-cpm">0</div>
+              <div class="kpi-lbl">Personal Best CPM</div>
+            </div>
+            <div class="kpi-card glass-panel">
+              <div class="kpi-icon">🎯</div>
+              <div class="kpi-val" id="kpi-total-solved">0</div>
+              <div class="kpi-lbl">Total Questions Solved</div>
+            </div>
+            <div class="kpi-card glass-panel">
+              <div class="kpi-icon">💯</div>
+              <div class="kpi-val" id="kpi-overall-acc">0%</div>
+              <div class="kpi-lbl">Overall Accuracy</div>
+            </div>
+            <div class="kpi-card glass-panel">
+              <div class="kpi-icon">🔥</div>
+              <div class="kpi-val" id="kpi-max-streak">0</div>
+              <div class="kpi-lbl">All-Time Max Streak</div>
+            </div>
+          </div>
+
+          <!-- ================= GRAPH ANALYSIS STUDIO ================= -->
+          <div class="graph-analysis-card glass-panel" id="graph-analysis-card">
+            <div class="graph-analysis-header">
+              <div class="graph-title-block">
+                <span class="graph-pretitle">VISUAL PERFORMANCE TELEMETRY</span>
+                <h3 class="graph-main-title">📊 Quantitative Performance Graph Analysis</h3>
+              </div>
+              
+              <!-- Graph View Mode Tabs -->
+              <div class="graph-type-tabs" role="tablist">
+                <button class="graph-tab-btn active" data-graph="trend">📈 Speed (CPM) Progression</button>
+                <button class="graph-tab-btn" data-graph="speed-acc">🎯 Speed vs Accuracy</button>
+                <button class="graph-tab-btn" data-graph="category">📊 Category Proficiency</button>
+                <button class="graph-tab-btn" data-graph="pace">⏱️ Pace Consistency</button>
+              </div>
+            </div>
+
+            <!-- Graph Meta & Legend Strip -->
+            <div class="graph-meta-strip">
+              <div class="graph-legend-group" id="graph-legend-group">
+                <!-- Dynamically populated legend items -->
+              </div>
+              <div class="graph-benchmark-badge" id="graph-benchmark-badge">
+                <span class="benchmark-dot"></span>
+                <span class="benchmark-text">SBI PO Cutoff Target: <strong>38 CPM</strong></span>
+              </div>
+            </div>
+
+            <!-- Graph Viewport Area -->
+            <div class="graph-viewport-wrapper">
+              <div class="graph-canvas-container" id="graph-canvas-container">
+                <!-- Interactive SVG Graph dynamically rendered -->
+              </div>
+              <div class="graph-tooltip" id="graph-tooltip" style="display: none;"></div>
+            </div>
+
+            <!-- Graph Diagnostic Insights Bar -->
+            <div class="graph-insights-grid" id="graph-insights-grid">
+              <div class="insight-stat-box">
+                <span class="insight-label">Speed Velocity</span>
+                <span class="insight-value" id="insight-velocity">--</span>
+                <span class="insight-sub" id="insight-velocity-sub">Recent trajectory</span>
+              </div>
+              <div class="insight-stat-box">
+                <span class="insight-label">Cutoff Readiness</span>
+                <span class="insight-value" id="insight-cutoff">--</span>
+                <span class="insight-sub" id="insight-cutoff-sub">35 Qs in 20 min model</span>
+              </div>
+              <div class="insight-stat-box">
+                <span class="insight-label">Accuracy Stability</span>
+                <span class="insight-value" id="insight-stability">--</span>
+                <span class="insight-sub" id="insight-stability-sub">Consistency index</span>
+              </div>
+              <div class="insight-stat-box">
+                <span class="insight-label">Optimal Focus Area</span>
+                <span class="insight-value" id="insight-focus">--</span>
+                <span class="insight-sub" id="insight-focus-sub">Priority recommendation</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Weak Spot Analysis -->
+          <div class="weakness-card glass-panel">
+            <h3>Diagnostic: Category Response Time & Accuracy</h3>
+            <div class="category-bars" id="category-bars">
+              <!-- Dynamically populated bars -->
+            </div>
+          </div>
+
+          <!-- Recent Sessions Table -->
+          <div class="recent-sessions-card glass-panel">
+            <h3>Recent Drill Sessions</h3>
+            <div class="table-responsive">
+              <table class="styled-table" id="sessions-table">
+                <thead>
+                  <tr>
+                    <th>Date & Time</th>
+                    <th>Category</th>
+                    <th>Mode</th>
+                    <th>Solved</th>
+                    <th>CPM</th>
+                    <th>Accuracy</th>
+                    <th>Score / Grade</th>
+                  </tr>
+                </thead>
+                <tbody id="sessions-table-body">
+                  <tr>
+                    <td colspan="7" class="text-muted">No drills completed yet. Start your first drill in the Speed
+                      Arena!</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Step 6 Navigation Footer -->
+          <div class="step-flow-footer">
+            <div class="step-flow-info">
+              <span class="step-flow-label">Step 6 of 6 • Score Diagnostics</span>
+              <span class="step-flow-title">Ready for another high-speed quantitative cycle?</span>
+            </div>
+            <div class="step-flow-buttons">
+              <button class="btn btn-secondary" onclick="switchTab('exam')">← Step 5: Bank Mock</button>
+              <button class="btn btn-primary" onclick="switchTab('shortcuts')">Restart Step 1: Vedic Shortcuts ↺</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Keyboard Shortcuts Modal -->
+    <div class="modal-overlay" id="hotkeys-modal" style="display:none;">
+      <div class="modal-content glass-panel">
+        <div class="modal-header">
+          <h3>⌨️ Keyboard Shortcuts & Pro Tips</h3>
+          <span class="modal-close" id="modal-close-btn">&times;</span>
+        </div>
+        <div class="modal-body">
+          <table class="hotkey-table">
+            <tr>
+              <td><kbd>Enter</kbd></td>
+              <td>Submit answer / Next question / Start drill</td>
+            </tr>
+            <tr>
+              <td><kbd>1</kbd> - <kbd>5</kbd></td>
+              <td>Select Option A to E in MCQ &amp; Mock Mode</td>
+            </tr>
+            <tr>
+              <td><kbd>1</kbd> - <kbd>6</kbd></td>
+              <td>Jump directly between Steps 1 to 6 (when idle)</td>
+            </tr>
+            <tr>
+              <td><kbd>Space</kbd></td>
+              <td>Clear answer input / Quick retry</td>
+            </tr>
+            <tr>
+              <td><kbd>H</kbd></td>
+              <td>Toggle Vedic shortcut hint for current problem</td>
+            </tr>
+            <tr>
+              <td><kbd>Esc</kbd></td>
+              <td>Pause / End drill session</td>
+            </tr>
+          </table>
+          <div class="bank-exam-tip-note">
+            <strong>💡 Pro-Banker Advice:</strong> In bank exams, never calculate on paper what you can solve mentally.
+            Learn to round off (Approximation), split numbers (Addition/Multiplication), and remember squares up to 50
+            by heart!
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast-container" class="toast-container"></div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/audio.js"></script>
+  <script src="js/tricks-data.js"></script>
+  <script src="js/engine.js"></script>
+  <script src="js/analytics.js"></script>
+  <script src="js/app.js"></script>
+</body>
+
+</html>
