@@ -30,7 +30,6 @@
         </div>
         <div class="brand-text">
           <h1>SpeedBanker</h1>
-          <span class="sub-badge">Bank Exam Quantitative Engine</span>
         </div>
       </div>
 
@@ -47,16 +46,20 @@
           <span class="step-num">3</span>
           <span class="tab-label">Speed Arena</span>
         </button>
-        <button class="nav-tab" data-tab="flash" id="tab-flash-btn" title="Step 4: Flash Reflex Math">
+        <button class="nav-tab" data-tab="reasoning" id="tab-reasoning-btn" title="Step 4: Reasoning Speed Drills & Golden Rules">
           <span class="step-num">4</span>
+          <span class="tab-label">Reasoning Speed</span>
+        </button>
+        <button class="nav-tab" data-tab="flash" id="tab-flash-btn" title="Step 5: Flash Reflex Math">
+          <span class="step-num">5</span>
           <span class="tab-label">Flash Math</span>
         </button>
-        <button class="nav-tab" data-tab="exam" id="tab-exam-btn" title="Step 5: 15-Question Bank Speed Mock">
-          <span class="step-num">5</span>
+        <button class="nav-tab" data-tab="exam" id="tab-exam-btn" title="Step 6: 15-Question Bank Speed Mock">
+          <span class="step-num">6</span>
           <span class="tab-label">Bank Mock</span>
         </button>
-        <button class="nav-tab" data-tab="analytics" id="tab-analytics-btn" title="Step 6: Score Diagnostics & History">
-          <span class="step-num">6</span>
+        <button class="nav-tab" data-tab="analytics" id="tab-analytics-btn" title="Step 7: Score Diagnostics & History">
+          <span class="step-num">7</span>
           <span class="tab-label">Performance</span>
         </button>
       </nav>
@@ -83,7 +86,12 @@
             <div class="config-title-wrap">
               <div class="config-accent-icon">⚡</div>
               <div>
-                <h3 class="config-title">Workout Configuration</h3>
+                <div style="display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
+                  <h3 class="config-title">Workout Configuration</h3>
+                  <span class="auto-saved-pill" id="level-saved-indicator" title="Your chosen level, operation, and workout mode are remembered automatically">
+                    <span class="pill-check">✓</span> Level Remembered
+                  </span>
+                </div>
                 <p class="config-subtitle">Tailor your mathematical operation, exam difficulty, and training speed</p>
               </div>
             </div>
@@ -495,12 +503,143 @@
         <!-- Step 3 Navigation Footer -->
         <div class="step-flow-footer">
           <div class="step-flow-info">
-            <span class="step-flow-label">Step 3 of 6 • Speed Drills</span>
-            <span class="step-flow-title">Sharpened arithmetic? Train subconscious visual speed with Flash Math</span>
+            <span class="step-flow-label">Step 3 of 7 • Speed Drills</span>
+            <span class="step-flow-title">Mastered arithmetic? Drill high-speed Bank Exam Reasoning Ability</span>
           </div>
           <div class="step-flow-buttons">
             <button class="btn btn-secondary" onclick="switchTab('tables')">← Step 2: Tables &amp; Charts</button>
-            <button class="btn btn-primary" onclick="switchTab('flash')">Proceed to Step 4: Flash Math →</button>
+            <button class="btn btn-primary" onclick="switchTab('reasoning')">Proceed to Step 4: Reasoning Speed →</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB 4: REASONING SPEED & CHEAT CODES ================= -->
+      <section id="tab-reasoning" class="tab-pane">
+        <div class="reasoning-container">
+          <!-- Top Hero & Mode Switcher -->
+          <div class="reasoning-header glass-panel">
+            <div class="reasoning-title-wrap">
+              <div class="reasoning-badge-tag">BANK REASONING ABILITY SPEED ENGINE</div>
+              <h2>⚡ High-Speed Bank Reasoning Drills &amp; Golden Rules</h2>
+              <p>Conquer 35 Reasoning questions in 20 minutes for SBI PO, IBPS, and RRB. Train lightning deduction for Inequalities, Syllogisms ("Only a Few"), Alphabet Matrices, Direction Sense, and Blood Relations.</p>
+            </div>
+            
+            <div class="reasoning-mode-switch">
+              <button class="reasoning-mode-btn active" id="reasoning-mode-drill-btn" data-mode="drill">
+                <span>⚡ Live Speed Drill</span>
+              </button>
+              <button class="reasoning-mode-btn" id="reasoning-mode-rules-btn" data-mode="rules">
+                <span>📜 Golden Rules &amp; Cheat Codes</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- DRILL VIEW CONTAINER -->
+          <div class="reasoning-view" id="reasoning-drill-view">
+            <!-- Topic Filter Strip -->
+            <div class="reasoning-topic-strip glass-panel">
+              <div class="topic-strip-label">Select Topic:</div>
+              <div class="reasoning-topic-chips" id="reasoning-topic-chips">
+                <button class="reasoning-chip active" data-topic="all">⚡ All Topics (Mixed Drill)</button>
+                <button class="reasoning-chip" data-topic="puzzle_basics">🧩 Puzzle Clue Basics ("N Away", "N Between")</button>
+                <button class="reasoning-chip" data-topic="inequalities">👑 Inequalities (King-Queen Law)</button>
+                <button class="reasoning-chip" data-topic="syllogisms">⭕ Syllogisms ("Only a Few")</button>
+                <button class="reasoning-chip" data-topic="alphabet">🔤 Alphabet &amp; EJOTY</button>
+                <button class="reasoning-chip" data-topic="direction">🧭 Direction &amp; Distance</button>
+                <button class="reasoning-chip" data-topic="blood_relations">👥 Blood Relations</button>
+              </div>
+            </div>
+
+            <!-- Live Drill Interactive Arena -->
+            <div class="reasoning-drill-arena glass-panel">
+              <!-- HUD Bar -->
+              <div class="reasoning-hud">
+                <div class="reasoning-hud-item">
+                  <span class="hud-label">QUESTIONS SOLVED</span>
+                  <span class="hud-val" id="reasoning-hud-solved">0</span>
+                </div>
+                <div class="reasoning-hud-item">
+                  <span class="hud-label">ACCURACY</span>
+                  <span class="hud-val" id="reasoning-hud-acc">100%</span>
+                </div>
+                <div class="reasoning-hud-item">
+                  <span class="hud-label">CURRENT STREAK</span>
+                  <span class="hud-val streak-val" id="reasoning-hud-streak">0 🔥</span>
+                </div>
+                <div class="reasoning-hud-item">
+                  <span class="hud-label">PACE / QUESTION</span>
+                  <span class="hud-val" id="reasoning-hud-pace">0.0s</span>
+                </div>
+                <div class="reasoning-hud-actions">
+                  <button class="btn btn-secondary btn-sm" id="reasoning-next-btn">
+                    <span>Next Question →</span>
+                    <kbd class="key-hint">Enter</kbd>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Question Card -->
+              <div class="reasoning-question-box" id="reasoning-question-box">
+                <div class="rq-header">
+                  <div class="rq-tags">
+                    <span class="tag-category" id="rq-category-tag">Inequalities</span>
+                    <span class="tag-difficulty" id="rq-sub-tag">SBI PO / IBPS Prelims</span>
+                  </div>
+                  <div class="rq-timer" id="rq-timer">⏱️ 0.0s</div>
+                </div>
+
+                <div class="rq-statement-card">
+                  <div class="rq-section-title">STATEMENT / PREMISES:</div>
+                  <div class="rq-statement-text" id="rq-statement-text">P &gt; Q &gt;= R = S &lt; T &lt;= U</div>
+                </div>
+
+                <div class="rq-conclusions-card" id="rq-conclusions-card">
+                  <div class="rq-section-title">CONCLUSIONS / TARGET:</div>
+                  <div class="rq-conclusions-list" id="rq-conclusions-list">
+                    <!-- Populated dynamically -->
+                  </div>
+                </div>
+
+                <!-- 5 Bank Exam Options -->
+                <div class="rq-options-container">
+                  <div class="rq-options-label">Select the correct option (or press Keys 1 to 5):</div>
+                  <div class="rq-options-grid" id="rq-options-grid">
+                    <!-- 5 Option Buttons generated dynamically -->
+                  </div>
+                </div>
+
+                <!-- Instant Solution & Reasoning Explanation Banner -->
+                <div class="rq-explanation-card" id="rq-explanation-card" style="display: none;">
+                  <div class="rq-exp-header" id="rq-exp-header">
+                    <span class="rq-exp-status-icon" id="rq-exp-status-icon">✓</span>
+                    <span class="rq-exp-status-text" id="rq-exp-status-text">CORRECT! Excellent deduction.</span>
+                  </div>
+                  <div class="rq-exp-body">
+                    <strong>Logical Step-by-Step Proof:</strong>
+                    <p id="rq-exp-content"></p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- GOLDEN RULES & CHEAT SHEETS CONTAINER -->
+          <div class="reasoning-view" id="reasoning-rules-view" style="display: none;">
+            <div class="reasoning-rules-grid" id="reasoning-rules-grid">
+              <!-- Dynamically populated from REASONING_RULES -->
+            </div>
+          </div>
+
+          <!-- Step 4 Navigation Footer -->
+          <div class="step-flow-footer">
+            <div class="step-flow-info">
+              <span class="step-flow-label">Step 4 of 7 • Reasoning Speed</span>
+              <span class="step-flow-title">Logical speed tuned? Train subconscious visual speed with Flash Math</span>
+            </div>
+            <div class="step-flow-buttons">
+              <button class="btn btn-secondary" onclick="switchTab('arena')">← Step 3: Speed Arena</button>
+              <button class="btn btn-primary" onclick="switchTab('flash')">Proceed to Step 5: Flash Math →</button>
+            </div>
           </div>
         </div>
       </section>
@@ -559,15 +698,15 @@
           </div>
         </div>
 
-        <!-- Step 4 Navigation Footer -->
+        <!-- Step 5 Navigation Footer -->
         <div class="step-flow-footer">
           <div class="step-flow-info">
-            <span class="step-flow-label">Step 4 of 6 • Reflex Conditioning</span>
+            <span class="step-flow-label">Step 5 of 7 • Reflex Conditioning</span>
             <span class="step-flow-title">Reflexes tuned? Take the 15-question authentic Bank Speed Mock!</span>
           </div>
           <div class="step-flow-buttons">
-            <button class="btn btn-secondary" onclick="switchTab('arena')">← Step 3: Speed Arena</button>
-            <button class="btn btn-primary" onclick="switchTab('exam')">Proceed to Step 5: Bank Mock →</button>
+            <button class="btn btn-secondary" onclick="switchTab('reasoning')">← Step 4: Reasoning Speed</button>
+            <button class="btn btn-primary" onclick="switchTab('exam')">Proceed to Step 6: Bank Mock →</button>
           </div>
         </div>
       </section>
@@ -646,15 +785,15 @@
           </div>
         </div>
 
-        <!-- Step 5 Navigation Footer -->
+        <!-- Step 6 Navigation Footer -->
         <div class="step-flow-footer">
           <div class="step-flow-info">
-            <span class="step-flow-label">Step 5 of 6 • Exam Simulation</span>
+            <span class="step-flow-label">Step 6 of 7 • Exam Simulation</span>
             <span class="step-flow-title">Exam completed? Analyze your speed, accuracy &amp; past score progression</span>
           </div>
           <div class="step-flow-buttons">
-            <button class="btn btn-secondary" onclick="switchTab('flash')">← Step 4: Flash Math</button>
-            <button class="btn btn-primary" onclick="switchTab('analytics')">Proceed to Step 6: Performance →</button>
+            <button class="btn btn-secondary" onclick="switchTab('flash')">← Step 5: Flash Math</button>
+            <button class="btn btn-primary" onclick="switchTab('analytics')">Proceed to Step 7: Performance →</button>
           </div>
         </div>
       </section>
@@ -675,7 +814,7 @@
           <!-- Step 1 Navigation Footer -->
           <div class="step-flow-footer">
             <div class="step-flow-info">
-              <span class="step-flow-label">Step 1 of 6 • Foundations</span>
+              <span class="step-flow-label">Step 1 of 7 • Foundations</span>
               <span class="step-flow-title">Done with Shortcuts? Test your memory with Tables &amp; Reciprocals</span>
             </div>
             <div class="step-flow-buttons">
@@ -703,7 +842,7 @@
           <!-- Step 2 Navigation Footer -->
           <div class="step-flow-footer">
             <div class="step-flow-info">
-              <span class="step-flow-label">Step 2 of 6 • Core Memorization</span>
+              <span class="step-flow-label">Step 2 of 7 • Core Memorization</span>
               <span class="step-flow-title">Foundations memorized? Enter the live timed Speed Arena!</span>
             </div>
             <div class="step-flow-buttons">
@@ -845,14 +984,14 @@
             </div>
           </div>
 
-          <!-- Step 6 Navigation Footer -->
+          <!-- Step 7 Navigation Footer -->
           <div class="step-flow-footer">
             <div class="step-flow-info">
-              <span class="step-flow-label">Step 6 of 6 • Score Diagnostics</span>
-              <span class="step-flow-title">Ready for another high-speed quantitative cycle?</span>
+              <span class="step-flow-label">Step 7 of 7 • Score Diagnostics</span>
+              <span class="step-flow-title">Ready for another high-speed quantitative &amp; reasoning cycle?</span>
             </div>
             <div class="step-flow-buttons">
-              <button class="btn btn-secondary" onclick="switchTab('exam')">← Step 5: Bank Mock</button>
+              <button class="btn btn-secondary" onclick="switchTab('exam')">← Step 6: Bank Mock</button>
               <button class="btn btn-primary" onclick="switchTab('shortcuts')">Restart Step 1: Vedic Shortcuts ↺</button>
             </div>
           </div>
@@ -876,11 +1015,11 @@
             </tr>
             <tr>
               <td><kbd>1</kbd> - <kbd>5</kbd></td>
-              <td>Select Option A to E in MCQ &amp; Mock Mode</td>
+              <td>Select Option A to E in Reasoning, MCQ &amp; Mock Mode</td>
             </tr>
             <tr>
-              <td><kbd>1</kbd> - <kbd>6</kbd></td>
-              <td>Jump directly between Steps 1 to 6 (when idle)</td>
+              <td><kbd>1</kbd> - <kbd>7</kbd></td>
+              <td>Jump directly between Steps 1 to 7 (when idle)</td>
             </tr>
             <tr>
               <td><kbd>Space</kbd></td>
@@ -897,7 +1036,7 @@
           </table>
           <div class="bank-exam-tip-note">
             <strong>💡 Pro-Banker Advice:</strong> In bank exams, never calculate on paper what you can solve mentally.
-            Learn to round off (Approximation), split numbers (Addition/Multiplication), and remember squares up to 50
+            Learn to round off (Approximation), split numbers (Addition/Multiplication), apply the King-Queen law in Inequalities, and remember squares up to 50
             by heart!
           </div>
         </div>
@@ -912,6 +1051,7 @@
   <script src="js/audio.js"></script>
   <script src="js/tricks-data.js"></script>
   <script src="js/engine.js"></script>
+  <script src="js/reasoning.js"></script>
   <script src="js/analytics.js"></script>
   <script src="js/app.js"></script>
 </body>

@@ -42,6 +42,19 @@ document.addEventListener('DOMContentLoaded', () => {
     examQuestions: [],
     examCurrentIndex: 0,
     examAnswers: {}, // index -> { selectedOpt, status: 'answered' | 'marked' | 'unanswered' }
+
+    // Reasoning State
+    reasoningTopic: 'all',
+    reasoningMode: 'drill', // 'drill' or 'rules'
+    reasoningCurrentQ: null,
+    reasoningStartTime: 0,
+    reasoningTimerInterval: null,
+    reasoningSolved: 0,
+    reasoningCorrect: 0,
+    reasoningStreak: 0,
+    reasoningMaxStreak: 0,
+    reasoningTotalTimeSec: 0,
+    reasoningAnswered: false,
   };
 
   // DOM Elements
@@ -138,7 +151,32 @@ document.addEventListener('DOMContentLoaded', () => {
     chartTabBtns: document.querySelectorAll('.chart-tab-btn'),
     chartContentArea: document.getElementById('chart-content-area'),
     exportStatsBtn: document.getElementById('export-stats-btn'),
-    clearStatsBtn: document.getElementById('clear-stats-btn')
+    clearStatsBtn: document.getElementById('clear-stats-btn'),
+
+    // Reasoning DOM
+    reasoningModeDrillBtn: document.getElementById('reasoning-mode-drill-btn'),
+    reasoningModeRulesBtn: document.getElementById('reasoning-mode-rules-btn'),
+    reasoningDrillView: document.getElementById('reasoning-drill-view'),
+    reasoningRulesView: document.getElementById('reasoning-rules-view'),
+    reasoningTopicChips: document.querySelectorAll('.reasoning-chip'),
+    reasoningHudSolved: document.getElementById('reasoning-hud-solved'),
+    reasoningHudAcc: document.getElementById('reasoning-hud-acc'),
+    reasoningHudStreak: document.getElementById('reasoning-hud-streak'),
+    reasoningHudPace: document.getElementById('reasoning-hud-pace'),
+    reasoningNextBtn: document.getElementById('reasoning-next-btn'),
+    rqCategoryTag: document.getElementById('rq-category-tag'),
+    rqSubTag: document.getElementById('rq-sub-tag'),
+    rqTimer: document.getElementById('rq-timer'),
+    rqStatementText: document.getElementById('rq-statement-text'),
+    rqConclusionsCard: document.getElementById('rq-conclusions-card'),
+    rqConclusionsList: document.getElementById('rq-conclusions-list'),
+    rqOptionsGrid: document.getElementById('rq-options-grid'),
+    rqExplanationCard: document.getElementById('rq-explanation-card'),
+    rqExpHeader: document.getElementById('rq-exp-header'),
+    rqExpStatusIcon: document.getElementById('rq-exp-status-icon'),
+    rqExpStatusText: document.getElementById('rq-exp-status-text'),
+    rqExpContent: document.getElementById('rq-exp-content'),
+    reasoningRulesGrid: document.getElementById('reasoning-rules-grid')
   };
 
   // ==========================================
@@ -181,9 +219,22 @@ document.addEventListener('DOMContentLoaded', () => {
   // 3. TAB NAVIGATION
   // ==========================================
   function switchTab(tabId) {
-    dom.navTabs.forEach(t => t.classList.toggle('active', t.dataset.tab === tabId));
+    dom.navTabs.forEach(t => {
+      const isActive = t.dataset.tab === tabId;
+      t.classList.toggle('active', isActive);
+      if (isActive) {
+        const navContainer = t.parentElement;
+        if (navContainer && navContainer.scrollWidth > navContainer.clientWidth) {
+          const targetScrollLeft = t.offsetLeft - (navContainer.clientWidth / 2) + (t.offsetWidth / 2);
+          navContainer.scrollTo({ left: targetScrollLeft, behavior: 'smooth' });
+        }
+      }
+    });
     dom.tabPanes.forEach(p => p.classList.toggle('active', p.id === `tab-${tabId}`));
     state.currentTab = tabId;
+
+    // Reset window horizontal scroll to 0 to prevent any page horizontal offset
+    window.scrollTo({ left: 0 });
 
     if (tabId === 'analytics') {
       window.analyticsManager.renderDashboard();
@@ -191,6 +242,11 @@ document.addEventListener('DOMContentLoaded', () => {
       renderShortcutsTab();
     } else if (tabId === 'tables') {
       renderChartsTab('fraction-pct');
+    } else if (tabId === 'reasoning') {
+      if (!state.reasoningCurrentQ) {
+        loadNextReasoningQuestion();
+      }
+      renderReasoningRules();
     }
   }
 
@@ -207,6 +263,50 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.target === dom.hotkeysModal) dom.hotkeysModal.style.display = 'none';
   });
 
+  // ==========================================
+  // PREFERENCES PERSISTENCE MANAGER
+  // ==========================================
+  const SETTINGS_KEY = 'speedbanker_user_preferences_v1';
+
+  function loadSavedPreferences() {
+    try {
+      const raw = localStorage.getItem(SETTINGS_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch (e) {
+      console.warn('Could not load user preferences:', e);
+    }
+    return {
+      difficulty: 'po',
+      module: 'multiplication',
+      mode: 'time-60',
+      flashRows: '6',
+      flashDigits: '2',
+      flashSpeed: '800'
+    };
+  }
+
+  function savePreference(key, value) {
+    try {
+      const current = loadSavedPreferences();
+      current[key] = value;
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(current));
+      flashSavedIndicator();
+    } catch (e) {
+      console.warn('Could not save user preference:', e);
+    }
+  }
+
+  function flashSavedIndicator() {
+    const ind = document.getElementById('level-saved-indicator');
+    if (!ind) return;
+    ind.style.transform = 'scale(1.08)';
+    ind.style.borderColor = 'rgba(30, 142, 62, 0.6)';
+    setTimeout(() => {
+      ind.style.transform = 'scale(1)';
+      ind.style.borderColor = '';
+    }, 400);
+  }
+
   // Modern Config Studio Interactive Controllers
   const diffSegmentedBtns = document.querySelectorAll('#difficulty-segmented .segmented-btn');
   const diffBadgeIndicator = document.getElementById('diff-badge-indicator');
@@ -214,7 +314,16 @@ document.addEventListener('DOMContentLoaded', () => {
   const modeBadgeIndicator = document.getElementById('mode-badge-indicator');
   const categoryBadgeHint = document.getElementById('category-badge-hint');
 
-  function syncDifficultyUI(val) {
+  function updateCategoryBadge() {
+    if (!dom.moduleSelect || !categoryBadgeHint) return;
+    const selectedOpt = dom.moduleSelect.options[dom.moduleSelect.selectedIndex];
+    const optGroup = selectedOpt?.parentElement?.label || 'Bank Exam';
+    if (optGroup.includes('Foundations')) categoryBadgeHint.textContent = 'Foundations';
+    else if (optGroup.includes('Powers')) categoryBadgeHint.textContent = 'Powers & Roots';
+    else categoryBadgeHint.textContent = 'Real Exam Drill';
+  }
+
+  function syncDifficultyUI(val, shouldSave = true) {
     if (dom.difficultySelect) dom.difficultySelect.value = val;
     diffSegmentedBtns.forEach(btn => {
       btn.classList.toggle('active', btn.dataset.value === val);
@@ -224,9 +333,12 @@ document.addEventListener('DOMContentLoaded', () => {
       else if (val === 'po') diffBadgeIndicator.textContent = 'PO Prelims Level';
       else if (val === 'mains') diffBadgeIndicator.textContent = 'Mains & RBI Level';
     }
+    if (shouldSave) {
+      savePreference('difficulty', val);
+    }
   }
 
-  function syncModeUI(val) {
+  function syncModeUI(val, shouldSave = true) {
     if (dom.modeSelect) dom.modeSelect.value = val;
     modeChipBtns.forEach(btn => {
       btn.classList.toggle('active', btn.dataset.value === val);
@@ -242,31 +354,45 @@ document.addEventListener('DOMContentLoaded', () => {
       };
       modeBadgeIndicator.textContent = modeTitles[val] || 'Sprint';
     }
+    if (shouldSave) {
+      savePreference('mode', val);
+    }
   }
 
   diffSegmentedBtns.forEach(btn => {
     btn.addEventListener('click', () => {
-      syncDifficultyUI(btn.dataset.value);
+      syncDifficultyUI(btn.dataset.value, true);
       window.soundEngine.playTick();
     });
   });
 
   modeChipBtns.forEach(btn => {
     btn.addEventListener('click', () => {
-      syncModeUI(btn.dataset.value);
+      syncModeUI(btn.dataset.value, true);
       window.soundEngine.playTick();
     });
   });
 
   if (dom.moduleSelect) {
     dom.moduleSelect.addEventListener('change', () => {
-      const selectedOpt = dom.moduleSelect.options[dom.moduleSelect.selectedIndex];
-      const optGroup = selectedOpt.parentElement?.label || 'Bank Exam';
-      if (categoryBadgeHint) {
-        if (optGroup.includes('Foundations')) categoryBadgeHint.textContent = 'Foundations';
-        else if (optGroup.includes('Powers')) categoryBadgeHint.textContent = 'Powers & Roots';
-        else categoryBadgeHint.textContent = 'Real Exam Drill';
-      }
+      updateCategoryBadge();
+      savePreference('module', dom.moduleSelect.value);
+    });
+  }
+
+  if (dom.flashRowsSelect) {
+    dom.flashRowsSelect.addEventListener('change', () => {
+      savePreference('flashRows', dom.flashRowsSelect.value);
+    });
+  }
+  if (dom.flashDigitsSelect) {
+    dom.flashDigitsSelect.addEventListener('change', () => {
+      savePreference('flashDigits', dom.flashDigitsSelect.value);
+    });
+  }
+  if (dom.flashSpeedSelect) {
+    dom.flashSpeedSelect.addEventListener('change', () => {
+      savePreference('flashSpeed', dom.flashSpeedSelect.value);
     });
   }
 
@@ -274,10 +400,34 @@ document.addEventListener('DOMContentLoaded', () => {
   dom.presetChips.forEach(chip => {
     chip.addEventListener('click', () => {
       dom.moduleSelect.value = chip.dataset.module;
-      syncDifficultyUI(chip.dataset.diff);
+      updateCategoryBadge();
+      syncDifficultyUI(chip.dataset.diff, true);
+      savePreference('module', chip.dataset.module);
       startArena();
     });
   });
+
+  // Restore saved preferences on startup
+  const savedUserPrefs = loadSavedPreferences();
+  if (savedUserPrefs.difficulty) {
+    syncDifficultyUI(savedUserPrefs.difficulty, false);
+  }
+  if (savedUserPrefs.module && dom.moduleSelect) {
+    dom.moduleSelect.value = savedUserPrefs.module;
+    updateCategoryBadge();
+  }
+  if (savedUserPrefs.mode) {
+    syncModeUI(savedUserPrefs.mode, false);
+  }
+  if (savedUserPrefs.flashRows && dom.flashRowsSelect) {
+    dom.flashRowsSelect.value = savedUserPrefs.flashRows;
+  }
+  if (savedUserPrefs.flashDigits && dom.flashDigitsSelect) {
+    dom.flashDigitsSelect.value = savedUserPrefs.flashDigits;
+  }
+  if (savedUserPrefs.flashSpeed && dom.flashSpeedSelect) {
+    dom.flashSpeedSelect.value = savedUserPrefs.flashSpeed;
+  }
 
   // ==========================================
   // 4. SPEED ARENA LOGIC
@@ -951,6 +1101,210 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ==========================================
+  // 6.5. REASONING SPEED ENGINE & CHEAT CODES CONTROLLER
+  // ==========================================
+  function initReasoningModule() {
+    if (!dom.reasoningModeDrillBtn || !dom.reasoningModeRulesBtn) return;
+
+    // Mode Toggle (Live Drill vs Rules)
+    dom.reasoningModeDrillBtn.addEventListener('click', () => {
+      state.reasoningMode = 'drill';
+      dom.reasoningModeDrillBtn.classList.add('active');
+      dom.reasoningModeRulesBtn.classList.remove('active');
+      dom.reasoningDrillView.style.display = 'block';
+      dom.reasoningRulesView.style.display = 'none';
+      if (!state.reasoningCurrentQ) loadNextReasoningQuestion();
+    });
+
+    dom.reasoningModeRulesBtn.addEventListener('click', () => {
+      state.reasoningMode = 'rules';
+      dom.reasoningModeRulesBtn.classList.add('active');
+      dom.reasoningModeDrillBtn.classList.remove('active');
+      dom.reasoningDrillView.style.display = 'none';
+      dom.reasoningRulesView.style.display = 'block';
+      renderReasoningRules();
+    });
+
+    // Topic Filter Chips
+    dom.reasoningTopicChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        dom.reasoningTopicChips.forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        state.reasoningTopic = chip.dataset.topic;
+        loadNextReasoningQuestion();
+      });
+    });
+
+    // Next Question Button
+    if (dom.reasoningNextBtn) {
+      dom.reasoningNextBtn.addEventListener('click', () => {
+        loadNextReasoningQuestion();
+      });
+    }
+  }
+
+  function loadNextReasoningQuestion() {
+    if (!window.reasoningEngine) return;
+
+    let targetTopic = state.reasoningTopic;
+    if (targetTopic === 'all') {
+      const topics = ['puzzle_basics', 'inequalities', 'syllogisms', 'alphabet', 'direction', 'blood_relations'];
+      targetTopic = topics[Math.floor(Math.random() * topics.length)];
+    }
+
+    const q = window.reasoningEngine.generateQuestion(targetTopic);
+    state.reasoningCurrentQ = q;
+    state.reasoningAnswered = false;
+    state.reasoningStartTime = Date.now();
+
+    // Reset & Start question timer display
+    if (state.reasoningTimerInterval) clearInterval(state.reasoningTimerInterval);
+    state.reasoningTimerInterval = setInterval(() => {
+      if (!state.reasoningAnswered && dom.rqTimer) {
+        const sec = ((Date.now() - state.reasoningStartTime) / 1000).toFixed(1);
+        dom.rqTimer.textContent = `⏱️ ${sec}s`;
+      }
+    }, 100);
+
+    // Populate UI elements
+    const topicLabels = {
+      puzzle_basics: 'Puzzle Clue Basics',
+      inequalities: 'Inequalities',
+      syllogisms: 'Syllogisms',
+      alphabet: 'Alphabet & EJOTY',
+      direction: 'Direction Sense',
+      blood_relations: 'Blood Relations'
+    };
+    if (dom.rqCategoryTag) dom.rqCategoryTag.textContent = topicLabels[q.type] || q.type;
+    if (dom.rqSubTag) dom.rqSubTag.textContent = q.title || 'Bank Exam Drill';
+    if (dom.rqStatementText) dom.rqStatementText.textContent = q.statement;
+
+    // Conclusions
+    if (dom.rqConclusionsCard && dom.rqConclusionsList) {
+      if (q.conclusions && q.conclusions.length > 0) {
+        dom.rqConclusionsCard.style.display = 'block';
+        dom.rqConclusionsList.innerHTML = q.conclusions.map(c => `
+          <div class="rq-conclusion-item">${c}</div>
+        `).join('');
+      } else {
+        dom.rqConclusionsCard.style.display = 'none';
+      }
+    }
+
+    // Options
+    const optLetters = ['A', 'B', 'C', 'D', 'E'];
+    if (dom.rqOptionsGrid) {
+      dom.rqOptionsGrid.innerHTML = q.options.map((opt, i) => `
+        <button class="reasoning-opt-btn" data-index="${i}">
+          <span class="opt-badge">${optLetters[i]}</span>
+          <span class="opt-text">${opt}</span>
+          <span class="opt-key-hint">[${i + 1}]</span>
+        </button>
+      `).join('');
+
+      dom.rqOptionsGrid.querySelectorAll('.reasoning-opt-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          handleReasoningOption(parseInt(btn.dataset.index));
+        });
+      });
+    }
+
+    // Hide explanation card
+    if (dom.rqExplanationCard) dom.rqExplanationCard.style.display = 'none';
+  }
+
+  function handleReasoningOption(chosenIndex) {
+    if (state.reasoningAnswered || !state.reasoningCurrentQ) return;
+    state.reasoningAnswered = true;
+
+    if (state.reasoningTimerInterval) clearInterval(state.reasoningTimerInterval);
+
+    const elapsed = Math.max(0.5, (Date.now() - state.reasoningStartTime) / 1000);
+    state.reasoningTotalTimeSec += elapsed;
+    state.reasoningSolved++;
+
+    const isCorrect = (chosenIndex === state.reasoningCurrentQ.correctIndex);
+    if (isCorrect) {
+      state.reasoningCorrect++;
+      state.reasoningStreak++;
+      if (state.reasoningStreak > state.reasoningMaxStreak) state.reasoningMaxStreak = state.reasoningStreak;
+      window.soundEngine.playCorrect();
+    } else {
+      state.reasoningStreak = 0;
+      window.soundEngine.playWrong();
+    }
+
+    // Disable all options & highlight correct/wrong
+    const optButtons = dom.rqOptionsGrid.querySelectorAll('.reasoning-opt-btn');
+    optButtons.forEach((btn, idx) => {
+      btn.disabled = true;
+      if (idx === state.reasoningCurrentQ.correctIndex) {
+        btn.classList.add('correct');
+      } else if (idx === chosenIndex) {
+        btn.classList.add('wrong');
+      }
+    });
+
+    // Reveal Explanation Card
+    if (dom.rqExplanationCard) {
+      dom.rqExplanationCard.style.display = 'block';
+      const letters = ['A', 'B', 'C', 'D', 'E'];
+      if (isCorrect) {
+        dom.rqExpHeader.className = 'rq-exp-header correct';
+        dom.rqExpStatusIcon.textContent = '✓';
+        dom.rqExpStatusText.textContent = `CORRECT! Answer is Option ${letters[state.reasoningCurrentQ.correctIndex]}`;
+      } else {
+        dom.rqExpHeader.className = 'rq-exp-header wrong';
+        dom.rqExpStatusIcon.textContent = '✗';
+        dom.rqExpStatusText.textContent = `INCORRECT. Correct Option was ${letters[state.reasoningCurrentQ.correctIndex]}`;
+      }
+      dom.rqExpContent.textContent = state.reasoningCurrentQ.explanation;
+    }
+
+    // Update Reasoning HUD
+    updateReasoningHUD();
+  }
+
+  function updateReasoningHUD() {
+    if (dom.reasoningHudSolved) dom.reasoningHudSolved.textContent = state.reasoningSolved;
+    if (dom.reasoningHudAcc) {
+      const acc = state.reasoningSolved > 0 ? Math.round((state.reasoningCorrect / state.reasoningSolved) * 100) : 100;
+      dom.reasoningHudAcc.textContent = `${acc}%`;
+    }
+    if (dom.reasoningHudStreak) dom.reasoningHudStreak.textContent = `${state.reasoningStreak} 🔥`;
+    if (dom.reasoningHudPace) {
+      const pace = state.reasoningSolved > 0 ? (state.reasoningTotalTimeSec / state.reasoningSolved).toFixed(1) : '0.0';
+      dom.reasoningHudPace.textContent = `${pace}s`;
+    }
+  }
+
+  function renderReasoningRules() {
+    if (!dom.reasoningRulesGrid || !window.REASONING_RULES) return;
+    dom.reasoningRulesGrid.innerHTML = window.REASONING_RULES.map(rule => `
+      <div class="reasoning-rule-card glass-panel">
+        <div class="rule-top">
+          <div>
+            <h3 class="rule-title">${rule.title}</h3>
+            <span class="rule-badge" style="display:inline-block; margin-top: 0.35rem; background: var(--primary-subtle); color: var(--primary);">${rule.category}</span>
+          </div>
+          <span class="rule-badge">${rule.badge}</span>
+        </div>
+        <p class="rule-summary">${rule.summary}</p>
+        <ul class="rule-points-list">
+          ${rule.rules.map(r => `<li>${r}</li>`).join('')}
+        </ul>
+        <div class="rule-example-box">
+          <div class="ex-label">AUTHENTIC EXAM EXAMPLE:</div>
+          <div class="ex-statement">Statement: ${rule.example.statement}</div>
+          <div class="ex-conclusions">
+            ${rule.example.conclusions.map(c => `<div>• ${c}</div>`).join('')}
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // ==========================================
   // 7. VEDIC SHORTCUTS TAB RENDERING
   // ==========================================
   function renderShortcutsTab() {
@@ -987,6 +1341,8 @@ document.addEventListener('DOMContentLoaded', () => {
     else if (cat === 'Division') dom.moduleSelect.value = 'division';
     else if (cat === 'Approximation') dom.moduleSelect.value = 'approximation';
     else if (cat === 'Simplification') dom.moduleSelect.value = 'simplification';
+    updateCategoryBadge();
+    savePreference('module', dom.moduleSelect.value);
     startArena();
   };
 
@@ -1098,9 +1454,14 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    // Number keys 1-5 for MCQ options during active drill or exam
+    // Number keys 1-5 for MCQ options during active drill, reasoning, or exam
     if (['1', '2', '3', '4', '5'].includes(e.key)) {
-      if (state.arenaActive && state.currentQuestion?.type === 'mcq') {
+      if (state.currentTab === 'reasoning' && state.reasoningMode === 'drill') {
+        if (!state.reasoningAnswered) {
+          handleReasoningOption(parseInt(e.key) - 1);
+          return;
+        }
+      } else if (state.arenaActive && state.currentQuestion?.type === 'mcq') {
         const idx = parseInt(e.key) - 1;
         const btns = dom.mcqOptionsGrid.querySelectorAll('.mcq-btn');
         if (btns[idx]) {
@@ -1115,10 +1476,18 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    // Number keys 1-6 for Step navigation when not in an active drill or typing
-    if (['1', '2', '3', '4', '5', '6'].includes(e.key) && !state.arenaActive && !state.examActive && !state.flashActive) {
+    // Enter in reasoning tab when answered moves to next question
+    if (e.key === 'Enter' && state.currentTab === 'reasoning') {
+      if (state.reasoningAnswered) {
+        loadNextReasoningQuestion();
+        return;
+      }
+    }
+
+    // Number keys 1-7 for Step navigation when not in an active drill or typing
+    if (['1', '2', '3', '4', '5', '6', '7'].includes(e.key) && !state.arenaActive && !state.examActive && !state.flashActive && (state.currentTab !== 'reasoning' || state.reasoningMode === 'rules')) {
       if (document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
-        const stepTabs = ['shortcuts', 'tables', 'arena', 'flash', 'exam', 'analytics'];
+        const stepTabs = ['shortcuts', 'tables', 'arena', 'reasoning', 'flash', 'exam', 'analytics'];
         const stepIdx = parseInt(e.key) - 1;
         if (stepTabs[stepIdx]) {
           switchTab(stepTabs[stepIdx]);
@@ -1136,6 +1505,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Initial tab render
+  // Initial module and tab render
+  initReasoningModule();
   renderShortcutsTab();
 });
