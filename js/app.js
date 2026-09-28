@@ -32,6 +32,8 @@ document.addEventListener('DOMContentLoaded', () => {
     flashNumbers: [],
     flashIndex: 0,
     flashInterval: null,
+    flashTimeoutOff: null,
+    flashTimeoutNext: null,
     flashSpeed: 800,
     flashCorrectSum: 0,
 
@@ -45,6 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Reasoning State
     reasoningTopic: 'all',
+    reasoningLevel: 'all', // 'all', 'easy', 'moderate', 'hard'
     reasoningMode: 'drill', // 'drill' or 'rules'
     reasoningCurrentQ: null,
     reasoningStartTime: 0,
@@ -55,6 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
     reasoningMaxStreak: 0,
     reasoningTotalTimeSec: 0,
     reasoningAnswered: false,
+    reasoningSessionHistory: [], // records questions in active drill session
   };
 
   // DOM Elements
@@ -122,9 +126,12 @@ document.addEventListener('DOMContentLoaded', () => {
     flashRowsSelect: document.getElementById('flash-rows-select'),
     flashDigitsSelect: document.getElementById('flash-digits-select'),
     flashSpeedSelect: document.getElementById('flash-speed-select'),
+    flashDupSelect: document.getElementById('flash-dup-select'),
     startFlashBtn: document.getElementById('start-flash-btn'),
+    flashDisplayBox: document.getElementById('flash-display-box'),
     flashCountIndicator: document.getElementById('flash-count-indicator'),
     flashNumber: document.getElementById('flash-number'),
+    flashProgressDots: document.getElementById('flash-progress-dots'),
     flashInputBox: document.getElementById('flash-input-box'),
     flashAnswerInput: document.getElementById('flash-answer-input'),
     flashSubmitBtn: document.getElementById('flash-submit-btn'),
@@ -159,10 +166,12 @@ document.addEventListener('DOMContentLoaded', () => {
     reasoningDrillView: document.getElementById('reasoning-drill-view'),
     reasoningRulesView: document.getElementById('reasoning-rules-view'),
     reasoningTopicChips: document.querySelectorAll('.reasoning-chip'),
+    reasoningLevelChips: document.querySelectorAll('.reasoning-level-chip'),
     reasoningHudSolved: document.getElementById('reasoning-hud-solved'),
     reasoningHudAcc: document.getElementById('reasoning-hud-acc'),
     reasoningHudStreak: document.getElementById('reasoning-hud-streak'),
     reasoningHudPace: document.getElementById('reasoning-hud-pace'),
+    reasoningFinishSessionBtn: document.getElementById('reasoning-finish-session-btn'),
     reasoningNextBtn: document.getElementById('reasoning-next-btn'),
     rqCategoryTag: document.getElementById('rq-category-tag'),
     rqSubTag: document.getElementById('rq-sub-tag'),
@@ -231,6 +240,22 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
     dom.tabPanes.forEach(p => p.classList.toggle('active', p.id === `tab-${tabId}`));
+    
+    // If switching away from active flash drill, gracefully stop it
+    if (state.currentTab === 'flash' && tabId !== 'flash' && state.flashActive) {
+      clearFlashTimers();
+      state.flashActive = false;
+      if (dom.startFlashBtn) dom.startFlashBtn.disabled = false;
+      if (dom.flashNumber) dom.flashNumber.textContent = 'READY?';
+      if (dom.flashCountIndicator) dom.flashCountIndicator.textContent = 'Ready';
+      if (dom.flashDisplayBox) dom.flashDisplayBox.classList.remove('flashing', 'flash-repeat', 'flash-blank');
+    // If switching away from reasoning tab, auto-save any answered questions
+    if (state.currentTab === 'reasoning' && tabId !== 'reasoning') {
+      if (state.reasoningSessionHistory && state.reasoningSessionHistory.length >= 1) {
+        saveReasoningSession(false);
+      }
+    }
+
     state.currentTab = tabId;
 
     // Reset window horizontal scroll to 0 to prevent any page horizontal offset
@@ -281,7 +306,8 @@ document.addEventListener('DOMContentLoaded', () => {
       mode: 'time-60',
       flashRows: '6',
       flashDigits: '2',
-      flashSpeed: '800'
+      flashSpeed: '800',
+      flashDup: 'no-dup'
     };
   }
 
@@ -395,6 +421,11 @@ document.addEventListener('DOMContentLoaded', () => {
       savePreference('flashSpeed', dom.flashSpeedSelect.value);
     });
   }
+  if (dom.flashDupSelect) {
+    dom.flashDupSelect.addEventListener('change', () => {
+      savePreference('flashDup', dom.flashDupSelect.value);
+    });
+  }
 
   // Preset Chips
   dom.presetChips.forEach(chip => {
@@ -427,6 +458,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   if (savedUserPrefs.flashSpeed && dom.flashSpeedSelect) {
     dom.flashSpeedSelect.value = savedUserPrefs.flashSpeed;
+  }
+  if (savedUserPrefs.flashDup && dom.flashDupSelect) {
+    dom.flashDupSelect.value = savedUserPrefs.flashDup;
   }
 
   // ==========================================
@@ -761,68 +795,202 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==========================================
   // 5. FLASH CALCULATION (Mental Addition)
   // ==========================================
+  function clearFlashTimers() {
+    if (state.flashInterval) {
+      clearInterval(state.flashInterval);
+      state.flashInterval = null;
+    }
+    if (state.flashTimeoutOff) {
+      clearTimeout(state.flashTimeoutOff);
+      state.flashTimeoutOff = null;
+    }
+    if (state.flashTimeoutNext) {
+      clearTimeout(state.flashTimeoutNext);
+      state.flashTimeoutNext = null;
+    }
+  }
+
+  function renderFlashDots(total) {
+    if (!dom.flashProgressDots) return;
+    dom.flashProgressDots.innerHTML = '';
+    for (let i = 0; i < total; i++) {
+      const dot = document.createElement('div');
+      dot.className = 'flash-dot';
+      dot.id = `flash-dot-${i}`;
+      dom.flashProgressDots.appendChild(dot);
+    }
+  }
+
+  function updateFlashDots(currentIndex, total) {
+    for (let i = 0; i < total; i++) {
+      const dot = document.getElementById(`flash-dot-${i}`);
+      if (!dot) continue;
+      if (i < currentIndex) {
+        dot.className = 'flash-dot completed';
+      } else if (i === currentIndex) {
+        dot.className = 'flash-dot active';
+      } else {
+        dot.className = 'flash-dot';
+      }
+    }
+  }
+
+  function markFlashDotCompleted(index) {
+    const dot = document.getElementById(`flash-dot-${index}`);
+    if (dot) dot.className = 'flash-dot completed';
+  }
+
   function startFlashCalculation() {
+    clearFlashTimers();
+
     const rowCount = parseInt(dom.flashRowsSelect.value);
     const digits = parseInt(dom.flashDigitsSelect.value);
     state.flashSpeed = parseInt(dom.flashSpeedSelect.value);
+    const allowDup = dom.flashDupSelect ? dom.flashDupSelect.value === 'allow-dup' : false;
 
-    // Generate random numbers
+    // Generate random numbers ensuring no consecutive duplicate unless explicitly allowed
     state.flashNumbers = [];
-    const minVal = Math.pow(10, digits - 1);
+    const minVal = digits === 1 ? 1 : Math.pow(10, digits - 1);
     const maxVal = Math.pow(10, digits) - 1;
 
     for (let i = 0; i < rowCount; i++) {
-      state.flashNumbers.push(window.mathEngine.randomInt(minVal, maxVal));
+      let num;
+      let attempts = 0;
+      do {
+        num = window.mathEngine.randomInt(minVal, maxVal);
+        attempts++;
+      } while (
+        !allowDup &&
+        attempts < 50 &&
+        maxVal > minVal &&
+        state.flashNumbers.length > 0 &&
+        num === state.flashNumbers[state.flashNumbers.length - 1]
+      );
+      state.flashNumbers.push(num);
     }
     state.flashCorrectSum = state.flashNumbers.reduce((a, b) => a + b, 0);
 
+    state.flashActive = true;
     dom.flashInputBox.style.display = 'none';
     dom.startFlashBtn.disabled = true;
+    if (dom.flashDisplayBox) {
+      dom.flashDisplayBox.classList.remove('flashing', 'flash-repeat', 'flash-blank');
+    }
+    renderFlashDots(rowCount);
     dom.flashCountIndicator.textContent = 'Get ready!';
-    dom.flashNumber.textContent = '3...';
+    dom.flashNumber.innerHTML = '<span class="flash-num-text">3...</span>';
 
     // Countdown 3, 2, 1
     let prepCount = 3;
-    const prepInterval = setInterval(() => {
+    state.flashInterval = setInterval(() => {
       prepCount--;
       if (prepCount > 0) {
-        dom.flashNumber.textContent = `${prepCount}...`;
+        dom.flashNumber.innerHTML = `<span class="flash-num-text">${prepCount}...</span>`;
         window.soundEngine.playTick();
       } else {
-        clearInterval(prepInterval);
-        dom.flashNumber.textContent = 'GO!';
-        setTimeout(runFlashSequence, 400);
+        clearInterval(state.flashInterval);
+        state.flashInterval = null;
+        dom.flashNumber.innerHTML = '<span class="flash-num-text">GO!</span>';
+        state.flashTimeoutNext = setTimeout(runFlashSequence, 400);
       }
     }, 800);
   }
 
   function runFlashSequence() {
+    clearFlashTimers();
     state.flashIndex = 0;
     const total = state.flashNumbers.length;
+    const speed = state.flashSpeed;
+    // Standard Flash Anzan timing: ~75% visible, ~25% blank separation gap
+    const onDuration = Math.max(180, Math.round(speed * 0.75));
+    const offDuration = Math.max(70, speed - onDuration);
 
-    state.flashInterval = setInterval(() => {
-      if (state.flashIndex < total) {
-        dom.flashCountIndicator.textContent = `Number ${state.flashIndex + 1} of ${total}`;
-        dom.flashNumber.textContent = state.flashNumbers[state.flashIndex];
-        dom.flashNumber.style.animation = 'none';
-        void dom.flashNumber.offsetWidth; // Reflow
-        dom.flashNumber.style.animation = 'popIn 0.15s ease-out';
-        window.soundEngine.playTick();
-        state.flashIndex++;
-      } else {
-        clearInterval(state.flashInterval);
+    function showStep(index) {
+      if (!state.flashActive) return;
+
+      if (index >= total) {
+        state.flashActive = false;
+        clearFlashTimers();
         dom.flashCountIndicator.textContent = 'Sequence Finished';
-        dom.flashNumber.textContent = '?';
+        dom.flashNumber.innerHTML = '<span class="flash-num-text">?</span>';
+        if (dom.flashDisplayBox) {
+          dom.flashDisplayBox.classList.remove('flashing', 'flash-repeat', 'flash-blank');
+        }
         dom.flashInputBox.style.display = 'flex';
         dom.flashAnswerInput.value = '';
         dom.flashSolutionBreakdown.innerHTML = '';
         dom.flashAnswerInput.focus();
         dom.startFlashBtn.disabled = false;
+        return;
       }
-    }, state.flashSpeed);
+
+      state.flashIndex = index;
+      const currentNum = state.flashNumbers[index];
+      const prevNum = index > 0 ? state.flashNumbers[index - 1] : null;
+      const isRepeat = prevNum !== null && currentNum === prevNum;
+
+      // Update progress dots
+      updateFlashDots(index, total);
+
+      // On phase: display number
+      dom.flashCountIndicator.textContent = `Number ${index + 1} of ${total}`;
+      if (dom.flashDisplayBox) {
+        dom.flashDisplayBox.classList.remove('flash-blank');
+        if (isRepeat) {
+          dom.flashDisplayBox.classList.add('flash-repeat');
+          dom.flashDisplayBox.classList.remove('flashing');
+        } else {
+          dom.flashDisplayBox.classList.add('flashing');
+          dom.flashDisplayBox.classList.remove('flash-repeat');
+        }
+      }
+
+      let html = '';
+      if (isRepeat) {
+        html = `
+          <div class="flash-repeat-badge">⚡ SAME NUMBER (+${currentNum})</div>
+          <div class="flash-num-text repeat">${currentNum}</div>
+        `;
+      } else {
+        html = `<div class="flash-num-text">${currentNum}</div>`;
+      }
+      dom.flashNumber.innerHTML = html;
+      dom.flashNumber.style.animation = 'none';
+      void dom.flashNumber.offsetWidth; // Force reflow
+      dom.flashNumber.style.animation = 'popIn 0.15s cubic-bezier(0.16, 1, 0.3, 1)';
+      window.soundEngine.playTick();
+
+      // Off phase timeout: crisp visual blank/clear before next number
+      state.flashTimeoutOff = setTimeout(() => {
+        if (!state.flashActive) return;
+
+        if (dom.flashDisplayBox) {
+          dom.flashDisplayBox.classList.remove('flashing', 'flash-repeat');
+          dom.flashDisplayBox.classList.add('flash-blank');
+        }
+        dom.flashNumber.innerHTML = '<span class="flash-blank-dot">·</span>';
+        markFlashDotCompleted(index);
+
+        // Transition to next number
+        state.flashTimeoutNext = setTimeout(() => {
+          showStep(index + 1);
+        }, offDuration);
+      }, onDuration);
+    }
+
+    showStep(0);
   }
 
   dom.startFlashBtn.addEventListener('click', startFlashCalculation);
+
+  if (dom.flashAnswerInput) {
+    dom.flashAnswerInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        dom.flashSubmitBtn.click();
+      }
+    });
+  }
 
   dom.flashSubmitBtn.addEventListener('click', () => {
     const userVal = parseInt(dom.flashAnswerInput.value);
@@ -1128,12 +1296,37 @@ document.addEventListener('DOMContentLoaded', () => {
     // Topic Filter Chips
     dom.reasoningTopicChips.forEach(chip => {
       chip.addEventListener('click', () => {
+        if (state.reasoningSessionHistory && state.reasoningSessionHistory.length >= 2) {
+          saveReasoningSession(false);
+        }
         dom.reasoningTopicChips.forEach(c => c.classList.remove('active'));
         chip.classList.add('active');
         state.reasoningTopic = chip.dataset.topic;
         loadNextReasoningQuestion();
       });
     });
+
+    // Level / Difficulty Filter Chips
+    if (dom.reasoningLevelChips) {
+      dom.reasoningLevelChips.forEach(chip => {
+        chip.addEventListener('click', () => {
+          if (state.reasoningSessionHistory && state.reasoningSessionHistory.length >= 2) {
+            saveReasoningSession(false);
+          }
+          dom.reasoningLevelChips.forEach(c => c.classList.remove('active'));
+          chip.classList.add('active');
+          state.reasoningLevel = chip.dataset.level || 'all';
+          loadNextReasoningQuestion();
+        });
+      });
+    }
+
+    // Finish & Log Session Button
+    if (dom.reasoningFinishSessionBtn) {
+      dom.reasoningFinishSessionBtn.addEventListener('click', () => {
+        saveReasoningSession(true);
+      });
+    }
 
     // Next Question Button
     if (dom.reasoningNextBtn) {
@@ -1147,12 +1340,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!window.reasoningEngine) return;
 
     let targetTopic = state.reasoningTopic;
-    if (targetTopic === 'all') {
-      const topics = ['puzzle_basics', 'inequalities', 'syllogisms', 'alphabet', 'direction', 'blood_relations'];
-      targetTopic = topics[Math.floor(Math.random() * topics.length)];
-    }
+    let targetLevel = state.reasoningLevel;
 
-    const q = window.reasoningEngine.generateQuestion(targetTopic);
+    const q = window.reasoningEngine.generateQuestion(targetTopic, targetLevel);
     state.reasoningCurrentQ = q;
     state.reasoningAnswered = false;
     state.reasoningStartTime = Date.now();
@@ -1175,8 +1365,11 @@ document.addEventListener('DOMContentLoaded', () => {
       direction: 'Direction Sense',
       blood_relations: 'Blood Relations'
     };
-    if (dom.rqCategoryTag) dom.rqCategoryTag.textContent = topicLabels[q.type] || q.type;
-    if (dom.rqSubTag) dom.rqSubTag.textContent = q.title || 'Bank Exam Drill';
+    if (dom.rqCategoryTag) dom.rqCategoryTag.textContent = q.topicLabel || topicLabels[q.type] || q.type;
+    if (dom.rqSubTag) {
+      dom.rqSubTag.textContent = q.levelLabel || q.title || 'Bank Exam Drill';
+      dom.rqSubTag.className = `tag-difficulty ${q.level || 'moderate'}`;
+    }
     if (dom.rqStatementText) dom.rqStatementText.textContent = q.statement;
 
     // Conclusions
@@ -1234,6 +1427,15 @@ document.addEventListener('DOMContentLoaded', () => {
       window.soundEngine.playWrong();
     }
 
+    // Log to active session history
+    state.reasoningSessionHistory.push({
+      elapsed,
+      isCorrect,
+      topic: state.reasoningCurrentQ.type,
+      topicLabel: state.reasoningCurrentQ.topicLabel,
+      level: state.reasoningCurrentQ.level
+    });
+
     // Disable all options & highlight correct/wrong
     const optButtons = dom.rqOptionsGrid.querySelectorAll('.reasoning-opt-btn');
     optButtons.forEach((btn, idx) => {
@@ -1263,6 +1465,63 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Update Reasoning HUD
     updateReasoningHUD();
+
+    // Auto-sync milestone to Analytics every 8 questions
+    if (state.reasoningSessionHistory.length >= 8) {
+      saveReasoningSession(false);
+    }
+  }
+
+  function saveReasoningSession(isManual = false) {
+    if (!state.reasoningSessionHistory || state.reasoningSessionHistory.length === 0) {
+      if (isManual) showToast('ℹ️ Complete at least 1 question to log a drill session!');
+      return;
+    }
+
+    const items = [...state.reasoningSessionHistory];
+    const total = items.length;
+    const correct = items.filter(q => q.isCorrect).length;
+    const durationSec = Math.max(1, items.reduce((sum, q) => sum + q.elapsed, 0));
+    const cpm = Math.round((total / (durationSec / 60)));
+    const fastestTime = Math.min(...items.map(q => q.elapsed));
+    const slowestTime = Math.max(...items.map(q => q.elapsed));
+
+    const topicLabels = {
+      puzzle_basics: 'Puzzle Basics',
+      inequalities: 'Inequalities',
+      syllogisms: 'Syllogisms',
+      alphabet: 'Alphabet & Series',
+      direction: 'Direction Sense',
+      blood_relations: 'Blood Relations'
+    };
+
+    let catName = 'Reasoning (Mixed)';
+    if (state.reasoningTopic !== 'all' && topicLabels[state.reasoningTopic]) {
+      catName = `Reasoning: ${topicLabels[state.reasoningTopic]}`;
+    } else if (items.length > 0 && items.every(it => it.topic === items[0].topic)) {
+      catName = `Reasoning: ${topicLabels[items[0].topic] || items[0].topic}`;
+    }
+
+    const levelText = state.reasoningLevel === 'all' ? 'ADAPTIVE' : state.reasoningLevel.toUpperCase();
+
+    window.analyticsManager.recordSession({
+      category: catName,
+      section: 'Reasoning',
+      mode: 'Speed Drill',
+      difficulty: levelText,
+      total,
+      correct,
+      durationSec,
+      cpm,
+      maxStreak: state.reasoningMaxStreak,
+      fastestTime,
+      slowestTime
+    });
+
+    state.reasoningSessionHistory = [];
+
+    const acc = Math.round((correct / total) * 100);
+    showToast(`🧠 Reasoning Logged: ${correct}/${total} correct (${cpm} CPM, ${acc}% Acc) tracked in Performance graphs!`);
   }
 
   function updateReasoningHUD() {

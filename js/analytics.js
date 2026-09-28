@@ -8,6 +8,7 @@ class AnalyticsManager {
     this.STORAGE_KEY = 'speedbanker_analytics_v1';
     this.data = this.loadData();
     this.currentGraphType = 'trend';
+    this.currentSectionFilter = 'all'; // 'all', 'Quant', or 'Reasoning'
     this.init();
   }
 
@@ -19,10 +20,51 @@ class AnalyticsManager {
   }
 
   loadData() {
+    const defaultStats = {
+      // Quant Categories
+      'Multiplication': { solved: 0, correct: 0, totalTime: 0 },
+      'Tables (Pahade)': { solved: 0, correct: 0, totalTime: 0 },
+      'Addition': { solved: 0, correct: 0, totalTime: 0 },
+      'Subtraction': { solved: 0, correct: 0, totalTime: 0 },
+      'Division': { solved: 0, correct: 0, totalTime: 0 },
+      'Squares': { solved: 0, correct: 0, totalTime: 0 },
+      'Square Roots': { solved: 0, correct: 0, totalTime: 0 },
+      'Cubes': { solved: 0, correct: 0, totalTime: 0 },
+      'Cube Roots': { solved: 0, correct: 0, totalTime: 0 },
+      'Fraction to %': { solved: 0, correct: 0, totalTime: 0 },
+      'Simplification': { solved: 0, correct: 0, totalTime: 0 },
+      'Approximation': { solved: 0, correct: 0, totalTime: 0 },
+      'Number Series': { solved: 0, correct: 0, totalTime: 0 },
+      // Reasoning Categories
+      'Reasoning: Inequalities': { solved: 0, correct: 0, totalTime: 0 },
+      'Reasoning: Syllogisms': { solved: 0, correct: 0, totalTime: 0 },
+      'Reasoning: Alphabet & Series': { solved: 0, correct: 0, totalTime: 0 },
+      'Reasoning: Direction Sense': { solved: 0, correct: 0, totalTime: 0 },
+      'Reasoning: Blood Relations': { solved: 0, correct: 0, totalTime: 0 },
+      'Reasoning: Puzzle Basics': { solved: 0, correct: 0, totalTime: 0 },
+      'Reasoning (Mixed)': { solved: 0, correct: 0, totalTime: 0 }
+    };
+
     try {
       const raw = localStorage.getItem(this.STORAGE_KEY);
       if (raw) {
-        return JSON.parse(raw);
+        const parsed = JSON.parse(raw);
+        // Ensure all categories exist in categoryStats
+        parsed.categoryStats = parsed.categoryStats || {};
+        Object.keys(defaultStats).forEach(cat => {
+          if (!parsed.categoryStats[cat]) {
+            parsed.categoryStats[cat] = { solved: 0, correct: 0, totalTime: 0 };
+          }
+        });
+        // Ensure every session has section tagged
+        if (parsed.sessions && Array.isArray(parsed.sessions)) {
+          parsed.sessions.forEach(s => {
+            if (!s.section) {
+              s.section = (s.category && s.category.startsWith('Reasoning')) ? 'Reasoning' : 'Quant';
+            }
+          });
+        }
+        return parsed;
       }
     } catch (e) {
       console.error('Failed to load analytics data:', e);
@@ -34,21 +76,7 @@ class AnalyticsManager {
       totalTimeSeconds: 0,
       bestCPM: 0,
       allTimeMaxStreak: 0,
-      categoryStats: {
-        'Multiplication': { solved: 0, correct: 0, totalTime: 0 },
-        'Tables (Pahade)': { solved: 0, correct: 0, totalTime: 0 },
-        'Addition': { solved: 0, correct: 0, totalTime: 0 },
-        'Subtraction': { solved: 0, correct: 0, totalTime: 0 },
-        'Division': { solved: 0, correct: 0, totalTime: 0 },
-        'Squares': { solved: 0, correct: 0, totalTime: 0 },
-        'Square Roots': { solved: 0, correct: 0, totalTime: 0 },
-        'Cubes': { solved: 0, correct: 0, totalTime: 0 },
-        'Cube Roots': { solved: 0, correct: 0, totalTime: 0 },
-        'Fraction to %': { solved: 0, correct: 0, totalTime: 0 },
-        'Simplification': { solved: 0, correct: 0, totalTime: 0 },
-        'Approximation': { solved: 0, correct: 0, totalTime: 0 },
-        'Number Series': { solved: 0, correct: 0, totalTime: 0 }
-      },
+      categoryStats: defaultStats,
       sessions: []
     };
   }
@@ -62,7 +90,7 @@ class AnalyticsManager {
   }
 
   recordSession(session) {
-    // session: { category, mode, difficulty, total, correct, durationSec, cpm, maxStreak, mistakes, fastestTime, slowestTime }
+    // session: { category, mode, difficulty, level, total, correct, durationSec, cpm, maxStreak, mistakes, fastestTime, slowestTime, section }
     this.data.totalSolved += session.total;
     this.data.totalCorrect += session.correct;
     this.data.totalTimeSeconds += session.durationSec;
@@ -75,13 +103,17 @@ class AnalyticsManager {
       this.data.allTimeMaxStreak = session.maxStreak;
     }
 
+    // Determine section (Quant vs Reasoning)
+    const section = session.section || (session.category && session.category.startsWith('Reasoning') ? 'Reasoning' : 'Quant');
+
     // Update Category Stats
     const cat = session.category;
-    if (this.data.categoryStats[cat]) {
-      this.data.categoryStats[cat].solved += session.total;
-      this.data.categoryStats[cat].correct += session.correct;
-      this.data.categoryStats[cat].totalTime += session.durationSec;
+    if (!this.data.categoryStats[cat]) {
+      this.data.categoryStats[cat] = { solved: 0, correct: 0, totalTime: 0 };
     }
+    this.data.categoryStats[cat].solved += session.total;
+    this.data.categoryStats[cat].correct += session.correct;
+    this.data.categoryStats[cat].totalTime += session.durationSec;
 
     // Compare with previous attempt
     const previousAttempt = this.data.sessions.length > 0 ? this.data.sessions[0] : null;
@@ -96,8 +128,9 @@ class AnalyticsManager {
       id: Date.now(),
       date: new Date().toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
       category: session.category,
+      section: section,
       mode: session.mode,
-      difficulty: session.difficulty,
+      difficulty: session.difficulty || session.level || 'MODERATE',
       total: session.total,
       correct: session.correct,
       durationSec: session.durationSec,
@@ -111,10 +144,10 @@ class AnalyticsManager {
       grade: this.getGrade(session.cpm, acc)
     };
 
-    // Keep up to 50 recent sessions
+    // Keep up to 60 recent sessions
     this.data.sessions.unshift(newSessionEntry);
 
-    if (this.data.sessions.length > 50) {
+    if (this.data.sessions.length > 60) {
       this.data.sessions.pop();
     }
 
@@ -366,12 +399,16 @@ class AnalyticsManager {
           hasData = true;
           const acc = Math.round((stat.correct / stat.solved) * 100);
           const avgTime = (stat.totalTime / stat.solved).toFixed(1);
+          const isReasoning = cat.startsWith('Reasoning');
+          const secPill = isReasoning
+            ? `<span class="sec-badge reasoning" style="margin-right: 0.35rem;">🧠 Reasoning</span>`
+            : `<span class="sec-badge quant" style="margin-right: 0.35rem;">⚡ Quant</span>`;
 
           const barRow = document.createElement('div');
           barRow.className = 'cat-bar-row';
           barRow.innerHTML = `
             <div class="cat-bar-header">
-              <span><strong>${cat}</strong> (${stat.solved} solved, avg ${avgTime}s)</span>
+              <span>${secPill}<strong>${cat}</strong> (${stat.solved} solved, avg ${avgTime}s)</span>
               <span style="color: ${acc >= 85 ? 'var(--accent-green)' : (acc >= 70 ? 'var(--accent-gold)' : 'var(--accent-red)')}">
                 ${acc}% Accuracy
               </span>
@@ -385,26 +422,33 @@ class AnalyticsManager {
       });
 
       if (!hasData) {
-        catBarsContainer.innerHTML = '<p class="text-muted" style="color: var(--text-muted); font-size: 0.9rem;">Practice in the Speed Arena to generate diagnostic performance data across operations!</p>';
+        catBarsContainer.innerHTML = '<p class="text-muted" style="color: var(--text-muted); font-size: 0.9rem;">Practice in the Speed Arena and Reasoning Speed to generate diagnostic performance telemetry!</p>';
       }
     }
 
     const tableBody = document.getElementById('sessions-table-body');
     if (tableBody) {
       if (this.data.sessions.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="7" class="text-muted" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No drills completed yet. Start your first drill in the Speed Arena!</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="7" class="text-muted" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No drills completed yet. Start your first drill in the Speed Arena or Reasoning tab!</td></tr>';
       } else {
-        tableBody.innerHTML = this.data.sessions.map(s => `
-          <tr>
-            <td>${s.date}</td>
-            <td><strong>${s.category}</strong> <span style="font-size: 0.75rem; color: var(--text-muted);">(${s.difficulty})</span></td>
-            <td>${s.mode}</td>
-            <td>${s.correct} / ${s.total}</td>
-            <td><strong style="color: var(--accent-cyan); font-family: var(--font-mono);">${s.cpm}</strong></td>
-            <td><span style="color: ${s.accuracy >= 85 ? 'var(--accent-green)' : 'var(--accent-gold)'}">${s.accuracy}%</span></td>
-            <td><span class="badge-ribbon" style="font-size: 0.7rem; padding: 0.2rem 0.6rem; margin: 0;">${s.grade}</span></td>
-          </tr>
-        `).join('');
+        tableBody.innerHTML = this.data.sessions.map(s => {
+          const isReasoning = (s.section === 'Reasoning' || (s.category && s.category.startsWith('Reasoning')));
+          const secBadge = isReasoning
+            ? `<span class="section-tag reasoning">🧠 Reasoning</span>`
+            : `<span class="section-tag quant">⚡ Quant</span>`;
+
+          return `
+            <tr>
+              <td>${s.date}</td>
+              <td>${secBadge} <strong>${s.category}</strong> <span style="font-size: 0.75rem; color: var(--text-muted);">(${s.difficulty})</span></td>
+              <td>${s.mode}</td>
+              <td>${s.correct} / ${s.total}</td>
+              <td><strong style="color: ${isReasoning ? '#ab47bc' : 'var(--accent-cyan)'}; font-family: var(--font-mono);">${s.cpm}</strong></td>
+              <td><span style="color: ${s.accuracy >= 85 ? 'var(--accent-green)' : 'var(--accent-gold)'}">${s.accuracy}%</span></td>
+              <td><span class="badge-ribbon" style="font-size: 0.7rem; padding: 0.2rem 0.6rem; margin: 0;">${s.grade}</span></td>
+            </tr>
+          `;
+        }).join('');
       }
     }
 
@@ -421,6 +465,17 @@ class AnalyticsManager {
         btns.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         this.currentGraphType = btn.dataset.graph;
+        this.renderGraphAnalysis();
+      });
+    });
+
+    // Section Filter buttons (All / Quant / Reasoning)
+    const secBtns = document.querySelectorAll('.graph-section-btn');
+    secBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        secBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        this.currentSectionFilter = btn.dataset.section || 'all';
         this.renderGraphAnalysis();
       });
     });
@@ -450,16 +505,35 @@ class AnalyticsManager {
     const badge = document.getElementById('graph-benchmark-badge');
     if (!container) return;
 
-    const sessions = this.data.sessions || [];
+    const allSessions = this.data.sessions || [];
+    const sessions = (this.currentSectionFilter === 'all')
+      ? allSessions
+      : allSessions.filter(s => (s.section || (s.category && s.category.startsWith('Reasoning') ? 'Reasoning' : 'Quant')) === this.currentSectionFilter);
+
     this.updateGraphInsights(sessions);
 
     if (this.currentGraphType === 'trend') {
       if (legendGroup) {
-        legendGroup.innerHTML = `
-          <div class="legend-chip"><span class="legend-dot-sq" style="background:#1a73e8;"></span> Your Speed (CPM)</div>
-          <div class="legend-chip"><span class="legend-dot-sq" style="background:#d93025;"></span> Cutoff (38 CPM)</div>
-          <div class="legend-chip"><span class="legend-dot-sq" style="background:#1e8e3e;"></span> Topper Benchmark (45 CPM)</div>
-        `;
+        if (this.currentSectionFilter === 'all') {
+          legendGroup.innerHTML = `
+            <div class="legend-chip"><span class="legend-dot-sq" style="background:#1a73e8;"></span> ⚡ Quant Drills</div>
+            <div class="legend-chip"><span class="legend-dot-sq" style="background:#9c27b0;"></span> 🧠 Reasoning Drills</div>
+            <div class="legend-chip"><span class="legend-dot-sq" style="background:#d93025;"></span> Cutoff (38 CPM)</div>
+            <div class="legend-chip"><span class="legend-dot-sq" style="background:#1e8e3e;"></span> Topper Benchmark (45 CPM)</div>
+          `;
+        } else if (this.currentSectionFilter === 'Reasoning') {
+          legendGroup.innerHTML = `
+            <div class="legend-chip"><span class="legend-dot-sq" style="background:#9c27b0;"></span> 🧠 Reasoning Speed (CPM)</div>
+            <div class="legend-chip"><span class="legend-dot-sq" style="background:#d93025;"></span> Prelims Benchmark (35 CPM)</div>
+            <div class="legend-chip"><span class="legend-dot-sq" style="background:#1e8e3e;"></span> PO Target (45+ CPM)</div>
+          `;
+        } else {
+          legendGroup.innerHTML = `
+            <div class="legend-chip"><span class="legend-dot-sq" style="background:#1a73e8;"></span> ⚡ Quant Speed (CPM)</div>
+            <div class="legend-chip"><span class="legend-dot-sq" style="background:#d93025;"></span> Cutoff (38 CPM)</div>
+            <div class="legend-chip"><span class="legend-dot-sq" style="background:#1e8e3e;"></span> Topper Benchmark (45 CPM)</div>
+          `;
+        }
       }
       if (badge) badge.style.display = 'inline-flex';
       this.renderTrendGraph(sessions, container);
@@ -477,7 +551,8 @@ class AnalyticsManager {
     } else if (this.currentGraphType === 'category') {
       if (legendGroup) {
         legendGroup.innerHTML = `
-          <div class="legend-chip"><span class="legend-dot-sq" style="background:#1a73e8;"></span> Speed (CPM)</div>
+          <div class="legend-chip"><span class="legend-dot-sq" style="background:#1a73e8;"></span> Quant Speed (CPM)</div>
+          <div class="legend-chip"><span class="legend-dot-sq" style="background:#9c27b0;"></span> Reasoning Speed (CPM)</div>
           <div class="legend-chip"><span class="legend-dot-sq" style="background:#1e8e3e;"></span> Accuracy %</div>
         `;
       }
@@ -503,6 +578,12 @@ class AnalyticsManager {
     const plotH = H - padT - padB;
 
     if (sessions.length === 0) {
+      const secMsg = this.currentSectionFilter === 'Reasoning'
+        ? 'No Reasoning drill sessions recorded yet. Solve questions in the Reasoning Speed tab to generate your reasoning progression!'
+        : (this.currentSectionFilter === 'Quant'
+          ? 'No Quant drill sessions recorded yet. Practice in Speed Arena to generate your arithmetic pace trend!'
+          : 'No drill sessions recorded yet. Complete drills in Speed Arena or Reasoning to generate your cross-website performance trend!');
+
       container.innerHTML = `
         <svg viewBox="0 0 ${W} ${H}">
           <!-- Reference Lines -->
@@ -516,8 +597,8 @@ class AnalyticsManager {
           <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT + plotH}" stroke="var(--border-color)" stroke-width="1.5" />
           <line x1="${padL}" y1="${padT + plotH}" x2="${W - padR}" y2="${padT + plotH}" stroke="var(--border-color)" stroke-width="1.5" />
 
-          <text x="${W / 2}" y="${H / 2 + 10}" fill="var(--text-secondary)" font-size="13" font-weight="500" text-anchor="middle">
-            No drill sessions recorded yet. Complete a 60s drill in Speed Arena to generate your CPM velocity trend!
+          <text x="${W / 2}" y="${H / 2 + 10}" fill="var(--text-secondary)" font-size="12" font-weight="500" text-anchor="middle">
+            ${secMsg}
           </text>
         </svg>
       `;
@@ -563,9 +644,12 @@ class AnalyticsManager {
     set.forEach((s, i) => {
       const cx = getX(i);
       const cy = getY(s.cpm);
-      const tip = `<strong>${s.category}</strong> (${s.difficulty})<br>Speed: <strong>${s.cpm} CPM</strong><br>Accuracy: <strong>${s.accuracy}%</strong><br>Date: ${s.date}`;
+      const isReasoning = (s.section === 'Reasoning' || (s.category && s.category.startsWith('Reasoning')));
+      const pointColor = isReasoning ? '#9c27b0' : '#1a73e8';
+      const secIcon = isReasoning ? '🧠' : '⚡';
+      const tip = `<strong>${secIcon} ${s.section || (isReasoning ? 'Reasoning' : 'Quant')}: ${s.category}</strong> (${s.difficulty})<br>Speed: <strong>${s.cpm} CPM</strong><br>Accuracy: <strong>${s.accuracy}%</strong><br>Date: ${s.date}`;
       nodesSvg += `
-        <circle cx="${cx}" cy="${cy}" r="5" fill="#1a73e8" stroke="#ffffff" stroke-width="2" style="cursor:pointer;"
+        <circle cx="${cx}" cy="${cy}" r="6" fill="${pointColor}" stroke="#ffffff" stroke-width="2" style="cursor:pointer;"
           onmouseenter="window.analyticsManager.showTooltip(event, '${tip}')"
           onmousemove="window.analyticsManager.showTooltip(event, '${tip}')"
           onmouseleave="window.analyticsManager.hideTooltip()" />
@@ -573,13 +657,16 @@ class AnalyticsManager {
       `;
     });
 
+    const lineColor = this.currentSectionFilter === 'Reasoning' ? '#9c27b0' : '#1a73e8';
+    const areaColor = this.currentSectionFilter === 'Reasoning' ? 'rgba(156, 39, 176, 0.12)' : 'rgba(26, 115, 232, 0.12)';
+
     container.innerHTML = `
       <svg viewBox="0 0 ${W} ${H}">
         ${gridSvg}
         ${cutoffSvg}
         ${topperSvg}
-        <polygon points="${areaPoints}" fill="rgba(26, 115, 232, 0.12)" />
-        <polyline points="${points}" fill="none" stroke="#1a73e8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+        <polygon points="${areaPoints}" fill="${areaColor}" />
+        <polyline points="${points}" fill="none" stroke="${lineColor}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
         ${nodesSvg}
         <line x1="${padL}" y1="${padT + plotH}" x2="${W - padR}" y2="${padT + plotH}" stroke="var(--border-color)" stroke-width="1.5" />
         <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT + plotH}" stroke="var(--border-color)" stroke-width="1.5" />
@@ -637,7 +724,8 @@ class AnalyticsManager {
       else if (s.cpm >= 38 && s.accuracy < 85) dotColor = '#f9ab00';
       else if (s.cpm < 38 && s.accuracy < 85) dotColor = '#d93025';
 
-      const tip = `<strong>${s.category}</strong><br>Speed: <strong>${s.cpm} CPM</strong><br>Accuracy: <strong>${s.accuracy}%</strong><br>Grade: ${s.grade}`;
+      const isReasoning = (s.section === 'Reasoning' || (s.category && s.category.startsWith('Reasoning')));
+      const tip = `<strong>${isReasoning ? '🧠 Reasoning' : '⚡ Quant'}: ${s.category}</strong> (${s.difficulty})<br>Speed: <strong>${s.cpm} CPM</strong><br>Accuracy: <strong>${s.accuracy}%</strong><br>Grade: ${s.grade}`;
       dotsSvg += `
         <circle cx="${cx}" cy="${cy}" r="6" fill="${dotColor}" stroke="#ffffff" stroke-width="2" style="cursor:pointer;"
           onmouseenter="window.analyticsManager.showTooltip(event, '${tip}')"
@@ -680,13 +768,27 @@ class AnalyticsManager {
 
   renderCategoryGraph(container) {
     const W = 800, H = 300;
-    const padL = 120, padR = 40, padT = 25, padB = 30;
+    const padL = 170, padR = 40, padT = 25, padB = 30;
     const plotW = W - padL - padR;
     const plotH = H - padT - padB;
 
     const stats = this.data.categoryStats;
-    const keys = Object.keys(stats).filter(k => stats[k].solved > 0);
-    const displayKeys = keys.length > 0 ? keys : ['Multiplication', 'Squares', 'Addition', 'Division', 'Simplification', 'Approximation'];
+    let allKeys = Object.keys(stats);
+
+    if (this.currentSectionFilter === 'Quant') {
+      allKeys = allKeys.filter(k => !k.startsWith('Reasoning'));
+    } else if (this.currentSectionFilter === 'Reasoning') {
+      allKeys = allKeys.filter(k => k.startsWith('Reasoning'));
+    }
+
+    const solvedKeys = allKeys.filter(k => stats[k].solved > 0);
+    let displayKeys = solvedKeys.length > 0 ? solvedKeys : (
+      this.currentSectionFilter === 'Reasoning'
+        ? ['Reasoning: Inequalities', 'Reasoning: Syllogisms', 'Reasoning: Alphabet & Series', 'Reasoning: Direction Sense', 'Reasoning: Blood Relations', 'Reasoning: Puzzle Basics']
+        : (this.currentSectionFilter === 'Quant'
+          ? ['Multiplication', 'Squares', 'Addition', 'Division', 'Simplification', 'Approximation']
+          : ['Multiplication', 'Reasoning: Inequalities', 'Squares', 'Reasoning: Syllogisms', 'Simplification', 'Reasoning: Direction Sense'])
+    );
 
     const rowH = plotH / displayKeys.length;
     let barsSvg = '';
@@ -705,18 +807,22 @@ class AnalyticsManager {
       if (acc < 70) accColor = '#d93025';
       else if (acc < 85) accColor = '#f9ab00';
 
+      const isReasoning = cat.startsWith('Reasoning');
+      const cpmBarColor = isReasoning ? '#9c27b0' : '#1a73e8';
+      const labelText = cat.replace('Reasoning: ', '🧠 ').slice(0, 22);
+
       const tip = `<strong>${cat}</strong><br>Speed: <strong>${cpm} CPM</strong> (Avg ${avgTime.toFixed(1)}s)<br>Accuracy: <strong>${acc}%</strong> (${st.correct}/${st.solved} correct)`;
 
       barsSvg += `
         <!-- Category Label -->
-        <text x="${padL - 10}" y="${y + rowH * 0.6}" fill="var(--text-primary)" font-size="11" font-weight="600" text-anchor="end">${cat.slice(0, 14)}</text>
+        <text x="${padL - 10}" y="${y + rowH * 0.6}" fill="var(--text-primary)" font-size="11" font-weight="600" text-anchor="end">${labelText}</text>
         
-        <!-- CPM Bar (Blue) -->
-        <rect x="${padL}" y="${y + 4}" width="${Math.max(2, cpmW)}" height="${rowH * 0.35}" fill="#1a73e8" rx="2"
+        <!-- CPM Bar -->
+        <rect x="${padL}" y="${y + 4}" width="${Math.max(2, cpmW)}" height="${rowH * 0.35}" fill="${cpmBarColor}" rx="2"
           onmouseenter="window.analyticsManager.showTooltip(event, '${tip}')"
           onmousemove="window.analyticsManager.showTooltip(event, '${tip}')"
           onmouseleave="window.analyticsManager.hideTooltip()" />
-        <text x="${padL + cpmW + 6}" y="${y + rowH * 0.3}" fill="#1a73e8" font-size="10" font-weight="700">${cpm} CPM</text>
+        <text x="${padL + cpmW + 6}" y="${y + rowH * 0.3}" fill="${cpmBarColor}" font-size="10" font-weight="700">${cpm} CPM</text>
 
         <!-- Accuracy Bar -->
         <rect x="${padL}" y="${y + rowH * 0.45}" width="${Math.max(2, accW)}" height="${rowH * 0.35}" fill="${accColor}" rx="2"
@@ -726,6 +832,15 @@ class AnalyticsManager {
         <text x="${padL + accW + 6}" y="${y + rowH * 0.72}" fill="${accColor}" font-size="10" font-weight="700">${acc}%</text>
       `;
     });
+
+    container.innerHTML = `
+      <svg viewBox="0 0 ${W} ${H}">
+        <!-- Axes -->
+        <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT + plotH}" stroke="var(--border-color)" stroke-width="1.5" />
+        ${barsSvg}
+      </svg>
+    `;
+  }
 
     container.innerHTML = `
       <svg viewBox="0 0 ${W} ${H}">

@@ -550,6 +550,17 @@
               </div>
             </div>
 
+            <!-- Level / Difficulty Filter Strip -->
+            <div class="reasoning-level-strip glass-panel">
+              <div class="level-strip-label">Select Difficulty Level:</div>
+              <div class="reasoning-level-chips" id="reasoning-level-chips">
+                <button class="reasoning-level-chip active" data-level="all">⚡ All Levels (Adaptive)</button>
+                <button class="reasoning-level-chip" data-level="easy">🟢 Level 1: Easy (Clerk Prelims)</button>
+                <button class="reasoning-level-chip" data-level="moderate">🟡 Level 2: Moderate (PO Prelims)</button>
+                <button class="reasoning-level-chip" data-level="hard">🔴 Level 3: Hard (PO Mains)</button>
+              </div>
+            </div>
+
             <!-- Live Drill Interactive Arena -->
             <div class="reasoning-drill-arena glass-panel">
               <!-- HUD Bar -->
@@ -571,6 +582,9 @@
                   <span class="hud-val" id="reasoning-hud-pace">0.0s</span>
                 </div>
                 <div class="reasoning-hud-actions">
+                  <button class="btn btn-outline btn-sm" id="reasoning-finish-session-btn" title="Save current reasoning drill into Performance Analytics">
+                    <span>💾 Finish &amp; Log Drill</span>
+                  </button>
                   <button class="btn btn-secondary btn-sm" id="reasoning-next-btn">
                     <span>Next Question →</span>
                     <kbd class="key-hint">Enter</kbd>
@@ -680,12 +694,20 @@
                 <option value="350">Blazing (0.35s per number)</option>
               </select>
             </div>
+            <div class="config-group">
+              <label>Consecutive Duplicate:</label>
+              <select id="flash-dup-select">
+                <option value="no-dup" selected>Distinct Only (Never Same)</option>
+                <option value="allow-dup">Allow Same (With Repeat Badge)</option>
+              </select>
+            </div>
             <button id="start-flash-btn" class="btn btn-primary">⚡ Start Flash Sequence</button>
           </div>
 
           <div class="flash-display-box" id="flash-display-box">
             <div class="flash-count-indicator" id="flash-count-indicator">Ready</div>
             <div class="flash-number" id="flash-number">READY?</div>
+            <div class="flash-progress-dots" id="flash-progress-dots"></div>
           </div>
 
           <div class="flash-input-box" id="flash-input-box" style="display:none;">
@@ -894,7 +916,12 @@
             <div class="graph-analysis-header">
               <div class="graph-title-block">
                 <span class="graph-pretitle">VISUAL PERFORMANCE TELEMETRY</span>
-                <h3 class="graph-main-title">📊 Quantitative Performance Graph Analysis</h3>
+                <h3 class="graph-main-title">📊 Cross-Website Performance &amp; Graph Analytics</h3>
+                <div class="graph-section-filter" role="tablist">
+                  <button class="graph-section-btn active" data-section="all">🌐 All Sections</button>
+                  <button class="graph-section-btn" data-section="Quant">⚡ Quant Speed</button>
+                  <button class="graph-section-btn" data-section="Reasoning">🧠 Reasoning Speed</button>
+                </div>
               </div>
               
               <!-- Graph View Mode Tabs -->
