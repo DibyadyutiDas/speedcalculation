@@ -842,15 +842,6 @@ class AnalyticsManager {
     `;
   }
 
-    container.innerHTML = `
-      <svg viewBox="0 0 ${W} ${H}">
-        <!-- Axes -->
-        <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT + plotH}" stroke="var(--border-color)" stroke-width="1.5" />
-        ${barsSvg}
-      </svg>
-    `;
-  }
-
   renderPaceGraph(sessions, container) {
     const W = 800, H = 300;
     const padL = 50, padR = 30, padT = 30, padB = 40;

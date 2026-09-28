@@ -12,7 +12,7 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap"
     rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=2">
 </head>
 
 <body class="theme-light">
@@ -30,39 +30,42 @@
         </div>
         <div class="brand-text">
           <h1>SpeedBanker</h1>
+          <span class="sub-badge">BANK EXAM SPEED ENGINE</span>
         </div>
       </div>
 
-      <nav class="nav-tabs" role="tablist">
-        <button class="nav-tab active" data-tab="shortcuts" id="tab-shortcuts-btn" title="Step 1: Learn Vedic Shortcuts">
-          <span class="step-num">1</span>
-          <span class="tab-label">Vedic Shortcuts</span>
-        </button>
-        <button class="nav-tab" data-tab="tables" id="tab-tables-btn" title="Step 2: Memorize Tables & Charts">
-          <span class="step-num">2</span>
-          <span class="tab-label">Tables &amp; Charts</span>
-        </button>
-        <button class="nav-tab" data-tab="arena" id="tab-arena-btn" title="Step 3: Speed Arena Drills">
-          <span class="step-num">3</span>
-          <span class="tab-label">Speed Arena</span>
-        </button>
-        <button class="nav-tab" data-tab="reasoning" id="tab-reasoning-btn" title="Step 4: Reasoning Speed Drills & Golden Rules">
-          <span class="step-num">4</span>
-          <span class="tab-label">Reasoning Speed</span>
-        </button>
-        <button class="nav-tab" data-tab="flash" id="tab-flash-btn" title="Step 5: Flash Reflex Math">
-          <span class="step-num">5</span>
-          <span class="tab-label">Flash Math</span>
-        </button>
-        <button class="nav-tab" data-tab="exam" id="tab-exam-btn" title="Step 6: 15-Question Bank Speed Mock">
-          <span class="step-num">6</span>
-          <span class="tab-label">Bank Mock</span>
-        </button>
-        <button class="nav-tab" data-tab="analytics" id="tab-analytics-btn" title="Step 7: Score Diagnostics & History">
-          <span class="step-num">7</span>
-          <span class="tab-label">Performance</span>
-        </button>
-      </nav>
+      <div class="nav-tabs-wrapper">
+        <nav class="nav-tabs" role="tablist" aria-label="SpeedBanker Modules">
+          <button class="nav-tab active" data-tab="shortcuts" id="tab-shortcuts-btn" role="tab" aria-selected="true" title="Step 1: Learn Vedic Shortcuts">
+            <span class="step-num">1</span>
+            <span class="tab-label">Vedic Shortcuts</span>
+          </button>
+          <button class="nav-tab" data-tab="tables" id="tab-tables-btn" role="tab" aria-selected="false" title="Step 2: Memorize Tables & Charts">
+            <span class="step-num">2</span>
+            <span class="tab-label">Tables &amp; Charts</span>
+          </button>
+          <button class="nav-tab" data-tab="arena" id="tab-arena-btn" role="tab" aria-selected="false" title="Step 3: Speed Arena Drills">
+            <span class="step-num">3</span>
+            <span class="tab-label">Speed Arena</span>
+          </button>
+          <button class="nav-tab" data-tab="reasoning" id="tab-reasoning-btn" role="tab" aria-selected="false" title="Step 4: Reasoning Speed Drills & Golden Rules">
+            <span class="step-num">4</span>
+            <span class="tab-label">Reasoning Speed</span>
+          </button>
+          <button class="nav-tab" data-tab="flash" id="tab-flash-btn" role="tab" aria-selected="false" title="Step 5: Flash Reflex Math">
+            <span class="step-num">5</span>
+            <span class="tab-label">Flash Math</span>
+          </button>
+          <button class="nav-tab" data-tab="exam" id="tab-exam-btn" role="tab" aria-selected="false" title="Step 6: 15-Question Bank Speed Mock">
+            <span class="step-num">6</span>
+            <span class="tab-label">Bank Mock</span>
+          </button>
+          <button class="nav-tab" data-tab="analytics" id="tab-analytics-btn" role="tab" aria-selected="false" title="Step 7: Score Diagnostics & History">
+            <span class="step-num">7</span>
+            <span class="tab-label">Performance</span>
+          </button>
+        </nav>
+      </div>
 
       <div class="header-controls">
         <button id="theme-toggle-btn" class="icon-btn" title="Toggle Dark/Light Mode" aria-label="Toggle Theme">

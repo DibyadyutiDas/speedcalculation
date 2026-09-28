@@ -102,7 +102,7 @@ body.theme-dark {
 }
 
 html {
-  overflow-x: hidden;
+  overflow-x: clip;
   width: 100%;
   max-width: 100%;
 }
@@ -113,7 +113,7 @@ body {
   color: var(--text-primary);
   min-height: 100vh;
   line-height: 1.5;
-  overflow-x: hidden;
+  overflow-x: clip;
   width: 100%;
   max-width: 100%;
   -webkit-font-smoothing: antialiased;
@@ -143,27 +143,33 @@ body {
    HEADER & NAVIGATION BAR (Google / Meta Clean Nav)
    ===================================================================== */
 .app-header {
+  position: sticky;
+  top: 0.75rem;
+  z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1.25rem;
-  padding: 0.75rem 1.25rem;
+  padding: 0.65rem 1.25rem;
   margin-bottom: 1.5rem;
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .brand {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  flex-shrink: 0;
 }
 
 .brand-icon {
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   background: var(--primary);
   color: #ffffff;
   border-radius: var(--radius-sm);
@@ -171,6 +177,7 @@ body {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(26, 115, 232, 0.3);
 }
 
 body.theme-dark .brand-icon {
@@ -179,33 +186,55 @@ body.theme-dark .brand-icon {
 }
 
 .brand-icon svg {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
 }
 
 .brand-text h1 {
   font-size: 1.25rem;
   font-weight: 700;
   color: var(--text-primary);
-  line-height: 1.2;
-  letter-spacing: -0.01em;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
 }
 
 .brand-text .sub-badge {
-  font-size: 0.68rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
   color: var(--text-secondary);
   display: block;
+  margin-top: 1px;
 }
 
-/* Navigation Tabs (Google Workspace Style) */
-.nav-tabs {
+/* Navigation Tabs Segmented System */
+.nav-tabs-wrapper {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 0.2rem;
-  background: transparent;
+  min-width: 0;
+  flex: 1;
+  justify-content: center;
+}
+
+.nav-tabs {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: var(--bg-subtle);
+  padding: 0.25rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
   max-width: 100%;
+}
+
+.nav-tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .nav-tab {
@@ -213,17 +242,18 @@ body.theme-dark .brand-icon {
   border: 1px solid transparent;
   color: var(--text-secondary);
   font-family: var(--font-main);
-  font-size: 0.84rem;
+  font-size: 0.82rem;
   font-weight: 500;
-  padding: 0.45rem 0.65rem;
+  padding: 0.4rem 0.65rem;
   border-radius: var(--radius-sm);
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.4rem;
   transition: all var(--transition-fast);
   white-space: nowrap;
   flex-shrink: 0;
+  user-select: none;
 }
 
 .nav-tab:hover {
@@ -232,14 +262,18 @@ body.theme-dark .brand-icon {
 }
 
 .nav-tab.active {
-  background: var(--primary-subtle);
+  background: var(--bg-surface);
   color: var(--primary);
   font-weight: 600;
+  border-color: var(--border-subtle);
+  box-shadow: 0 1px 2px rgba(60, 64, 67, 0.12);
 }
 
 body.theme-dark .nav-tab.active {
-  color: #ffffff;
-  background: rgba(138, 180, 248, 0.2);
+  background: var(--bg-surface-raised);
+  color: #8ab4f8;
+  border-color: var(--border-strong);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
 }
 
 .step-num {
@@ -249,7 +283,7 @@ body.theme-dark .nav-tab.active {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: var(--bg-hover);
+  background: var(--border-subtle);
   color: var(--text-secondary);
   font-size: 0.72rem;
   font-weight: 700;
@@ -263,14 +297,15 @@ body.theme-dark .nav-tab.active {
 }
 
 body.theme-dark .nav-tab.active .step-num {
-  background: var(--primary);
-  color: #ffffff;
+  background: #8ab4f8;
+  color: #202124;
 }
 
 .header-controls {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  flex-shrink: 0;
 }
 
 .icon-btn {
@@ -2902,15 +2937,14 @@ body.theme-dark .step-flow-label {
   }
 }
 
-/* Responsive */
 /* Responsive Navbar & Layout */
-@media (max-width: 1180px) {
+@media (max-width: 1340px) {
   .app-header {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    padding: 0.75rem 1rem;
+    padding: 0.75rem 1rem 0.65rem;
     gap: 0.75rem 0.5rem;
   }
   .brand {
@@ -2920,20 +2954,17 @@ body.theme-dark .step-flow-label {
     order: 2;
     margin-left: auto;
   }
-  .nav-tabs {
+  .nav-tabs-wrapper {
     order: 3;
+    flex: 0 0 100%;
     width: 100%;
-    display: flex;
-    overflow-x: auto;
-    overflow-y: hidden;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none; /* Firefox */
-    padding: 0.4rem 0 0.2rem;
-    gap: 0.35rem;
-    border-top: 1px solid var(--border-subtle);
+    margin-top: 0.35rem;
   }
-  .nav-tabs::-webkit-scrollbar {
-    display: none; /* Chrome, Safari, Edge */
+  .nav-tabs {
+    width: 100%;
+    justify-content: flex-start;
+    padding: 0.3rem 0.35rem;
+    gap: 0.35rem;
   }
   .nav-tab {
     flex-shrink: 0;
@@ -2941,9 +2972,9 @@ body.theme-dark .step-flow-label {
     font-size: 0.82rem;
   }
   .nav-tab .step-num {
-    width: 18px;
-    height: 18px;
-    font-size: 0.68rem;
+    width: 19px;
+    height: 19px;
+    font-size: 0.7rem;
   }
   .config-main-grid {
     grid-template-columns: 1fr;
@@ -2961,8 +2992,10 @@ body.theme-dark .step-flow-label {
     padding: 0.5rem 0.5rem 1.5rem;
   }
   .app-header {
+    top: 0.25rem;
     padding: 0.6rem 0.75rem;
     margin-bottom: 1rem;
+    border-radius: var(--radius-sm);
   }
   .brand-text h1 {
     font-size: 1.15rem;
@@ -2971,9 +3004,18 @@ body.theme-dark .step-flow-label {
     width: 32px;
     height: 32px;
   }
+  .nav-tabs-wrapper {
+    margin: 0;
+    flex: 0 0 100%;
+    width: 100%;
+  }
+  .nav-tabs {
+    padding: 0.25rem;
+    gap: 0.25rem;
+  }
   .nav-tab {
-    padding: 0.35rem 0.65rem;
-    font-size: 0.8rem;
+    padding: 0.35rem 0.6rem;
+    font-size: 0.78rem;
     gap: 0.3rem;
   }
   .q-expression {

@@ -231,8 +231,9 @@ document.addEventListener('DOMContentLoaded', () => {
     dom.navTabs.forEach(t => {
       const isActive = t.dataset.tab === tabId;
       t.classList.toggle('active', isActive);
+      t.setAttribute('aria-selected', isActive ? 'true' : 'false');
       if (isActive) {
-        const navContainer = t.parentElement;
+        const navContainer = t.closest('.nav-tabs') || t.parentElement;
         if (navContainer && navContainer.scrollWidth > navContainer.clientWidth) {
           const targetScrollLeft = t.offsetLeft - (navContainer.clientWidth / 2) + (t.offsetWidth / 2);
           navContainer.scrollTo({ left: targetScrollLeft, behavior: 'smooth' });
@@ -249,6 +250,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (dom.flashNumber) dom.flashNumber.textContent = 'READY?';
       if (dom.flashCountIndicator) dom.flashCountIndicator.textContent = 'Ready';
       if (dom.flashDisplayBox) dom.flashDisplayBox.classList.remove('flashing', 'flash-repeat', 'flash-blank');
+    }
+
     // If switching away from reasoning tab, auto-save any answered questions
     if (state.currentTab === 'reasoning' && tabId !== 'reasoning') {
       if (state.reasoningSessionHistory && state.reasoningSessionHistory.length >= 1) {
@@ -280,6 +283,17 @@ document.addEventListener('DOMContentLoaded', () => {
   dom.navTabs.forEach(tab => {
     tab.addEventListener('click', () => switchTab(tab.dataset.tab));
   });
+
+  // Enable mouse wheel horizontal scrolling on the navigation tabs bar
+  const navTabsEl = document.querySelector('.nav-tabs');
+  if (navTabsEl) {
+    navTabsEl.addEventListener('wheel', (e) => {
+      if (e.deltaY !== 0 && navTabsEl.scrollWidth > navTabsEl.clientWidth) {
+        e.preventDefault();
+        navTabsEl.scrollLeft += e.deltaY;
+      }
+    }, { passive: false });
+  }
 
   // Modal handlers
   dom.hotkeysBtn.addEventListener('click', () => { dom.hotkeysModal.style.display = 'flex'; });
