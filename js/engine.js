@@ -13,7 +13,7 @@ class MathEngine {
       const bankCategories = [
         'multiplication', 'tables', 'addition', 'subtraction', 'division',
         'squares', 'square_roots', 'cubes', 'cube_roots',
-        'fractions_pct', 'simplification', 'approximation', 'series'
+        'fractions_pct', 'simplification', 'approximation', 'series', 'quadratic', 'wrong_series'
       ];
       category = bankCategories[Math.floor(Math.random() * bankCategories.length)];
     }
@@ -45,6 +45,10 @@ class MathEngine {
         return this.generateApproximation(difficulty);
       case 'series':
         return this.generateNumberSeries(difficulty);
+      case 'quadratic':
+        return this.generateQuadratic(difficulty);
+      case 'wrong_series':
+        return this.generateWrongNumberSeries(difficulty);
       default:
         return this.generateMultiplication(difficulty);
     }
@@ -582,6 +586,231 @@ class MathEngine {
       difficulty: diff.toUpperCase(),
       expression: pick.expr,
       answer: pick.ans,
+      hint: pick.hint
+    };
+  }
+
+  // 14. QUADRATIC EQUATIONS COMPARISON (x vs y) - 5 Questions in Every RRB PO Shift!
+  generateQuadratic(diff = 'po') {
+    // Generate two quadratic equations:
+    // a1*x^2 + b1*x + c1 = 0 => roots r1, r2
+    // a2*y^2 + b2*y + c2 = 0 => roots s1, s2
+    // Standard standard options:
+    // A: x > y
+    // B: x < y
+    // C: x >= y
+    // D: x <= y
+    // E: x = y or Relationship cannot be established (CND)
+
+    const rootPool = [
+      // Preset pairs of rational roots [r1, r2, s1, s2, label]
+      // Case 1: x > y
+      { r: [5, 6], s: [2, 3], a1: 1, a2: 1, note: "Both roots of x > both roots of y" },
+      { r: [4, 7], s: [-2, 3], a1: 1, a2: 1, note: "x positive roots, y has negative/lower roots" },
+      { r: [6, 8], s: [2, 5], a1: 1, a2: 1, note: "x > y" },
+      
+      // Case 2: x < y
+      { r: [2, 3], s: [5, 6], a1: 1, a2: 1, note: "Both roots of x < both roots of y" },
+      { r: [-5, -2], s: [1, 4], a1: 1, a2: 1, note: "x negative, y positive" },
+      { r: [3, 4], s: [6, 9], a1: 1, a2: 1, note: "x < y" },
+
+      // Case 3: x >= y
+      { r: [4, 6], s: [2, 4], a1: 1, a2: 1, note: "Roots: x={4, 6}, y={2, 4} => x >= y" },
+      { r: [5, 7], s: [3, 5], a1: 1, a2: 1, note: "Overlap at 5, others x > y => x >= y" },
+      
+      // Case 4: x <= y
+      { r: [2, 4], s: [4, 6], a1: 1, a2: 1, note: "Roots: x={2, 4}, y={4, 6} => x <= y" },
+      { r: [3, 5], s: [5, 8], a1: 1, a2: 1, note: "Overlap at 5, others x < y => x <= y" },
+
+      // Case 5: CND (Relation cannot be established or x = y)
+      { r: [2, 6], s: [3, 5], a1: 1, a2: 1, note: "x={2, 6}, y={3, 5}. 2 < 3 but 6 > 5 => No relation (CND)" },
+      { r: [3, 8], s: [4, 7], a1: 1, a2: 1, note: "Interleaved roots => CND" },
+      { r: [-3, 4], s: [-2, 5], a1: 1, a2: 1, note: "Both equations have constant negative => Instant CND shortcut!" },
+      { r: [4, 4], s: [4, 4], a1: 1, a2: 1, note: "Both roots identical 4 => x = y" }
+    ];
+
+    if (diff === 'mains') {
+      // Add coefficient > 1
+      rootPool.push(
+        { r: [3, 5], s: [2, 4], a1: 2, a2: 1, note: "2x² - 16x + 30 = 0 (roots 3, 5) vs y² - 6y + 8 = 0 (roots 2, 4)" },
+        { r: [2, 3], s: [3, 6], a1: 1, a2: 2, note: "x={2, 3}, y={3, 6/2=3} => x <= y" }
+      );
+    }
+
+    const item = rootPool[this.randomInt(0, rootPool.length - 1)];
+    const r1 = item.r[0], r2 = item.r[1];
+    const s1 = item.s[0], s2 = item.s[1];
+
+    // Build Eq I for x: (x - r1)(x - r2) = x^2 - (r1+r2)x + (r1*r2) = 0
+    const a1 = item.a1 || 1;
+    const b1 = - (r1 + r2) * a1;
+    const c1 = (r1 * r2) * a1;
+
+    // Build Eq II for y: (y - s1)(y - s2) = y^2 - (s1+s2)y + (s1*s2) = 0
+    const a2 = item.a2 || 1;
+    const b2 = - (s1 + s2) * a2;
+    const c2 = (s1 * s2) * a2;
+
+    const formatEq = (a, b, c, varName) => {
+      let str = '';
+      if (a === 1) str += `${varName}²`;
+      else if (a === -1) str += `-${varName}²`;
+      else str += `${a}${varName}²`;
+
+      if (b > 0) str += ` + ${b === 1 ? '' : b}${varName}`;
+      else if (b < 0) str += ` - ${Math.abs(b) === 1 ? '' : Math.abs(b)}${varName}`;
+
+      if (c > 0) str += ` + ${c}`;
+      else if (c < 0) str += ` - ${Math.abs(c)}`;
+      str += ` = 0`;
+      return str;
+    };
+
+    const eq1Str = `I. ${formatEq(a1, b1, c1, 'x')}`;
+    const eq2Str = `II. ${formatEq(a2, b2, c2, 'y')}`;
+
+    // Determine correct relationship
+    // Compare all 4 pairs: (r1, s1), (r1, s2), (r2, s1), (r2, s2)
+    const pairs = [
+      [r1, s1], [r1, s2], [r2, s1], [r2, s2]
+    ];
+    let hasGreater = false, hasLesser = false, hasEqual = false;
+    pairs.forEach(([xVal, yVal]) => {
+      if (xVal > yVal) hasGreater = true;
+      else if (xVal < yVal) hasLesser = true;
+      else hasEqual = true;
+    });
+
+    let relationCode = 'CND';
+    let relationText = 'x = y or Relationship cannot be established';
+    if (hasGreater && !hasLesser && !hasEqual) {
+      relationCode = 'x > y';
+      relationText = 'x > y';
+    } else if (!hasGreater && hasLesser && !hasEqual) {
+      relationCode = 'x < y';
+      relationText = 'x < y';
+    } else if (hasGreater && !hasLesser && hasEqual) {
+      relationCode = 'x >= y';
+      relationText = 'x ≥ y';
+    } else if (!hasGreater && hasLesser && hasEqual) {
+      relationCode = 'x <= y';
+      relationText = 'x ≤ y';
+    } else if (!hasGreater && !hasLesser && hasEqual) {
+      relationCode = 'CND';
+      relationText = 'x = y or Relationship cannot be established';
+    } else {
+      relationCode = 'CND';
+      relationText = 'x = y or Relationship cannot be established';
+    }
+
+    const options = [
+      'x > y',
+      'x < y',
+      'x ≥ y',
+      'x ≤ y',
+      'x = y or Relationship cannot be established'
+    ];
+
+    const hint = `Roots of x: {${r1}, ${r2}}. Roots of y: {${s1}, ${s2}}. Comparison: ${relationText}. Sign Rule: If both constants (c1, c2) are negative, answer is ALWAYS CND in 1 second!`;
+
+    return {
+      type: 'mcq',
+      category: 'Quadratic Equations',
+      difficulty: diff.toUpperCase(),
+      expression: `${eq1Str}\n${eq2Str}`,
+      answer: relationText,
+      options: options,
+      hint: hint
+    };
+  }
+
+  // 15. WRONG NUMBER SERIES (Intruder Term Detection - Signature RRB PO Pattern!)
+  generateWrongNumberSeries(diff = 'po') {
+    const generators = [
+      () => {
+        // Pattern: Consecutive prime additions, one corrupted
+        const start = this.randomInt(10, 30);
+        const primes = [3, 5, 7, 11, 13, 17];
+        let correctSeq = [start];
+        for (let p of primes) {
+          correctSeq.push(correctSeq[correctSeq.length - 1] + p);
+        }
+        // Pick an index 2, 3, or 4 to corrupt
+        const errIdx = this.randomInt(2, 4);
+        let displaySeq = [...correctSeq];
+        const corruptDelta = this.randomInt(1, 2) === 1 ? 2 : -2;
+        displaySeq[errIdx] += corruptDelta;
+        const wrongTerm = displaySeq[errIdx];
+        const correctTerm = correctSeq[errIdx];
+
+        return {
+          expr: `Find the wrong number in the series:\n${displaySeq.join(', ')}`,
+          ans: wrongTerm.toString(),
+          options: displaySeq.slice(1).map(String),
+          hint: `Pattern: Differences should be consecutive primes (+3, +5, +7, +11, +13...). "${wrongTerm}" is wrong; it should be ${correctTerm}.`
+        };
+      },
+      () => {
+        // Pattern: *2 + 1, *2 + 2, *2 + 3, *2 + 4, *2 + 5
+        let curr = this.randomInt(3, 7);
+        let correctSeq = [curr];
+        for (let i = 1; i <= 5; i++) {
+          curr = curr * 2 + i;
+          correctSeq.push(curr);
+        }
+        const errIdx = this.randomInt(2, 4);
+        let displaySeq = [...correctSeq];
+        displaySeq[errIdx] += (this.randomInt(0, 1) ? 3 : -3);
+        const wrongTerm = displaySeq[errIdx];
+        const correctTerm = correctSeq[errIdx];
+
+        return {
+          expr: `Find the wrong number in the series:\n${displaySeq.join(', ')}`,
+          ans: wrongTerm.toString(),
+          options: displaySeq.slice(1).map(String),
+          hint: `Pattern: (×2 + 1), (×2 + 2), (×2 + 3)... Term "${wrongTerm}" breaks the step; it should be ${correctTerm}.`
+        };
+      },
+      () => {
+        // Pattern: Difference is cubes: +1³, +2³, +3³, +4³ (+1, +8, +27, +64)
+        let curr = this.randomInt(12, 35);
+        let correctSeq = [curr];
+        const cubes = [1, 8, 27, 64, 125];
+        for (let c of cubes) {
+          curr += c;
+          correctSeq.push(curr);
+        }
+        const errIdx = this.randomInt(2, 4);
+        let displaySeq = [...correctSeq];
+        displaySeq[errIdx] += 4;
+        const wrongTerm = displaySeq[errIdx];
+        const correctTerm = correctSeq[errIdx];
+
+        return {
+          expr: `Find the wrong number in the series:\n${displaySeq.join(', ')}`,
+          ans: wrongTerm.toString(),
+          options: displaySeq.slice(1).map(String),
+          hint: `Pattern: Differences are cubes (+1³, +8, +27, +64...). Term "${wrongTerm}" is wrong; it should be ${correctTerm}.`
+        };
+      }
+    ];
+
+    const pick = generators[this.randomInt(0, generators.length - 1)]();
+    // Ensure exactly 5 options for bank MCQ format
+    let opts = Array.from(new Set(pick.options));
+    if (opts.length > 5) opts = opts.slice(0, 5);
+    while (opts.length < 5) {
+      opts.push((parseInt(pick.ans) + opts.length * 5).toString());
+    }
+    opts.sort((a, b) => parseInt(a) - parseInt(b));
+
+    return {
+      type: 'mcq',
+      category: 'Wrong Number Series',
+      difficulty: diff.toUpperCase(),
+      expression: pick.expr,
+      answer: pick.ans,
+      options: opts,
       hint: pick.hint
     };
   }

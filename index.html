@@ -56,9 +56,9 @@
             <span class="step-num">5</span>
             <span class="tab-label">Flash Math</span>
           </button>
-          <button class="nav-tab" data-tab="exam" id="tab-exam-btn" role="tab" aria-selected="false" title="Step 6: 15-Question Bank Speed Mock">
+          <button class="nav-tab" data-tab="exam" id="tab-exam-btn" role="tab" aria-selected="false" title="Step 6: Quant &amp; Reasoning Mock Simulator">
             <span class="step-num">6</span>
-            <span class="tab-label">Bank Mock</span>
+            <span class="tab-label">Quant &amp; Reasoning</span>
           </button>
           <button class="nav-tab" data-tab="analytics" id="tab-analytics-btn" role="tab" aria-selected="false" title="Step 7: Score Diagnostics & History">
             <span class="step-num">7</span>
@@ -135,7 +135,9 @@
                   <optgroup label="Bank Exam Real Drills">
                     <option value="simplification">📝 Simplification (BODMAS Speed Drill)</option>
                     <option value="approximation">≈ Approximation (Nearest Integer Drill)</option>
-                    <option value="series">🔢 Missing & Wrong Number Series</option>
+                    <option value="quadratic">⚖️ Quadratic Equations (x vs y — RRB PO Essential)</option>
+                    <option value="series">🔢 Missing Number Series</option>
+                    <option value="wrong_series">❌ Wrong Number Series (Intruder Detection)</option>
                     <option value="all_mixed">🔥 Mixed Comprehensive Bank Drill</option>
                   </optgroup>
                 </select>
@@ -545,6 +547,7 @@
               <div class="reasoning-topic-chips" id="reasoning-topic-chips">
                 <button class="reasoning-chip active" data-topic="all">⚡ All Topics (Mixed Drill)</button>
                 <button class="reasoning-chip" data-topic="puzzle_basics">🧩 Puzzle Clue Basics ("N Away", "N Between")</button>
+                <button class="reasoning-chip" data-topic="phrasing_traps">🎯 Exam Phrasing Traps (Tricky/Repeated/Normal)</button>
                 <button class="reasoning-chip" data-topic="inequalities">👑 Inequalities (King-Queen Law)</button>
                 <button class="reasoning-chip" data-topic="syllogisms">⭕ Syllogisms ("Only a Few")</button>
                 <button class="reasoning-chip" data-topic="alphabet">🔤 Alphabet &amp; EJOTY</button>
@@ -727,11 +730,11 @@
         <div class="step-flow-footer">
           <div class="step-flow-info">
             <span class="step-flow-label">Step 5 of 7 • Reflex Conditioning</span>
-            <span class="step-flow-title">Reflexes tuned? Take the 15-question authentic Bank Speed Mock!</span>
+            <span class="step-flow-title">Reflexes tuned? Take the authentic Quant &amp; Reasoning Speed Mock!</span>
           </div>
           <div class="step-flow-buttons">
             <button class="btn btn-secondary" onclick="switchTab('reasoning')">← Step 4: Reasoning Speed</button>
-            <button class="btn btn-primary" onclick="switchTab('exam')">Proceed to Step 6: Bank Mock →</button>
+            <button class="btn btn-primary" onclick="switchTab('exam')">Proceed to Step 6: Quant &amp; Reasoning →</button>
           </div>
         </div>
       </section>
@@ -741,31 +744,51 @@
         <div class="exam-wrapper glass-panel">
           <div class="exam-top-strip">
             <div class="exam-title-badge">
-              <span class="exam-logo">🏛️</span>
+              <span class="exam-logo" id="exam-logo-icon">🌾</span>
               <div>
-                <strong>SBI / IBPS PO PRELIMS QUANT SPEED ROUND</strong>
-                <div class="exam-sub">Simplification, Approximation & Number Series Section</div>
+                <strong id="exam-main-title">RRB PO PRELIMS SPEED SIMULATOR</strong>
+                <div class="exam-sub" id="exam-sub-title">Quantitative Aptitude &amp; Reasoning Speed Assessment</div>
               </div>
             </div>
-            <div class="exam-timer-box">
-              <span class="timer-label">Time Left:</span>
-              <span class="exam-clock" id="exam-clock">10:00</span>
+            <!-- RRB PO Section Switcher (Only visible during composite test) -->
+            <div class="exam-section-nav" id="exam-section-nav" style="display:none;">
+              <button class="exam-sec-btn active" id="exam-sec-quant-btn" data-sec="quant">
+                <span class="sec-dot quant-dot"></span> ⚡ Quantitative Aptitude (<span id="exam-quant-count">20</span> Qs)
+              </button>
+              <button class="exam-sec-btn" id="exam-sec-reasoning-btn" data-sec="reasoning">
+                <span class="sec-dot reasoning-dot"></span> 🧠 Reasoning Ability (<span id="exam-reasoning-count">20</span> Qs)
+              </button>
             </div>
-            <button id="exam-submit-final-btn" class="btn btn-danger btn-sm" style="display:none;">Submit Test</button>
+            <div class="exam-timer-box">
+              <span class="timer-label">Time Remaining:</span>
+              <span class="exam-clock" id="exam-clock">22:00</span>
+            </div>
+            <button id="exam-submit-final-btn" class="btn btn-danger btn-sm" style="display:none;">Finish &amp; Submit Test</button>
           </div>
 
           <div class="exam-welcome" id="exam-welcome">
             <div class="welcome-card">
-              <h3>Real Exam Environment Simulation</h3>
-              <ul>
-                <li>Contains <strong>15 Authentic Bank Questions</strong> (Simplifications, Surds & Indices,
-                  Percentages, Squares/Cubes, Missing Number Series).</li>
-                <li>Each question carries <strong>1 Mark</strong>; negative marking of <strong>0.25 Marks</strong> for
-                  wrong answers.</li>
-                <li>Simulates the real TCS iON pattern with 5 Options, Question Palette (Answered, Not Answered, Marked
-                  for Review).</li>
-              </ul>
-              <button id="start-exam-btn" class="btn btn-primary btn-large">🚀 Launch 15-Question Speed Mock</button>
+              <div class="exam-mode-select-strip" style="display: flex; gap: 0.75rem; justify-content: center; margin-bottom: 1.5rem; flex-wrap: wrap;">
+                <button class="exam-mode-pill active" id="mode-rrb-po-btn" data-exam-type="rrb_po">
+                  🌾 RRB PO 40-Q Composite Mock (Quant + Reasoning | 22 Mins)
+                </button>
+                <button class="exam-mode-pill" id="mode-sbi-po-btn" data-exam-type="sbi_po">
+                  🏛️ SBI/IBPS 15-Q Quant Speed Drill (10 Mins)
+                </button>
+              </div>
+
+              <div id="exam-welcome-details">
+                <h3>🌾 RRB PO (Officer Scale 1) Authentic Prelims Simulator</h3>
+                <ul>
+                  <li><strong>Composite Time Allocation</strong>: 40 questions total (20 Quant + 20 Reasoning) with on-demand instant section switching.</li>
+                  <li><strong>Target High-Yield Quant</strong>: Quadratic Equations (x vs y), Wrong &amp; Missing Series, Approximations, BODMAS Simplifications.</li>
+                  <li><strong>Target Speed Reasoning</strong>: Syllogisms ("Only a Few"), Inequalities (King-Queen Law), Directions, Blood Relations &amp; Puzzle Traps.</li>
+                  <li><strong>Marking Scheme</strong>: +1.0 for Correct, -0.25 for Incorrect. Benchmarked against real <strong>RRB PO Cutoffs (54–62 / 80)</strong>.</li>
+                </ul>
+              </div>
+              <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-top: 1.5rem;">
+                <button id="start-exam-btn" class="btn btn-primary btn-large">🚀 Launch Quant &amp; Reasoning Mock</button>
+              </div>
             </div>
           </div>
 
@@ -931,6 +954,7 @@
               <div class="graph-type-tabs" role="tablist">
                 <button class="graph-tab-btn active" data-graph="trend">📈 Speed (CPM) Progression</button>
                 <button class="graph-tab-btn" data-graph="speed-acc">🎯 Speed vs Accuracy</button>
+                <button class="graph-tab-btn" data-graph="rrb-cutoff">🌾 RRB PO Score Predictor</button>
                 <button class="graph-tab-btn" data-graph="category">📊 Category Proficiency</button>
                 <button class="graph-tab-btn" data-graph="pace">⏱️ Pace Consistency</button>
               </div>
@@ -1021,7 +1045,7 @@
               <span class="step-flow-title">Ready for another high-speed quantitative &amp; reasoning cycle?</span>
             </div>
             <div class="step-flow-buttons">
-              <button class="btn btn-secondary" onclick="switchTab('exam')">← Step 6: Bank Mock</button>
+              <button class="btn btn-secondary" onclick="switchTab('exam')">← Step 6: Quant &amp; Reasoning</button>
               <button class="btn btn-primary" onclick="switchTab('shortcuts')">Restart Step 1: Vedic Shortcuts ↺</button>
             </div>
           </div>

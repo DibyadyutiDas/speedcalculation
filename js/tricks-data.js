@@ -452,6 +452,62 @@ const VEDIC_TRICKS = [
       ],
       result: "1152"
     }
+  },
+  {
+    id: "quant_phrasing_percent_traps",
+    title: "26. DI & Word Problem Phrasing: '% More' vs '% Less' vs '% Of'",
+    category: "Word Problem Phrasing",
+    badge: "Most Common Quant Trap",
+    description: "Instantly translate tricky percentage wordings in DI and Word Problems without getting trapped by base value shifts.",
+    example: {
+      problem: "'A is 25% MORE than B. B is what % LESS than A?'",
+      steps: [
+        "1. 'A is 25% more than B' -> A = B + (1/4)B = (5/4)B. Write ratio: A : B = 5 : 4.",
+        "2. Note the difference between them: 5 - 4 = 1 unit.",
+        "3. When question asks 'less than A', the BASE (denominator) is A (5 units), NOT B!",
+        "4. % Less = (Difference / Base A) × 100 = (1 / 5) × 100 = 20% less!",
+        "Rule: 'X is what % of Y' -> (X / Y) × 100. 'X is what % more/less than Y' -> (|X - Y| / Y) × 100."
+      ],
+      result: "20% less"
+    }
+  },
+  {
+    id: "quadratic_sign_hack",
+    title: "28. The 2-Second Quadratic Sign Rule (RRB PO Mandatory 5 Qs)",
+    category: "Algebraic Quadratics",
+    badge: "5 Questions in Every RRB PO",
+    description: "Solve quadratic equation comparisons (x vs y) in 2 seconds without finding roots using the universal constant sign rule.",
+    example: {
+      problem: "x² - 17x - 84 = 0 and y² + 23y - 108 = 0",
+      steps: [
+        "1. Golden Rule 1 (Both Constants Negative): If the constant term (c) in both equations is negative (-), answer is ALWAYS 'x = y or Relationship Cannot Be Established (CND)' in 1 second!",
+        "2. Golden Rule 2 (Sign Inversion):",
+        "   • Equation (++): (+bx + c = 0) -> Roots are both NEGATIVE (--)",
+        "   • Equation (-+): (-bx + c = 0) -> Roots are both POSITIVE (++)",
+        "   • Equation (+-): (+bx - c = 0) -> Roots are (- , +) with larger root negative",
+        "   • Equation (--): (-bx - c = 0) -> Roots are (+ , -) with larger root positive",
+        "3. If Eq I is (-+) [Roots ++] and Eq II is (++) [Roots --], then x > y ALWAYS without calculation!"
+      ],
+      result: "x > y or CND in 2s"
+    }
+  },
+  {
+    id: "wrong_series_triangulation",
+    title: "29. Wrong Number Series: Dual Difference Triangulation",
+    category: "Number Series",
+    badge: "RRB PO Signature Pattern",
+    description: "Find the intruder number in 10 seconds by observing which two adjacent differences are corrupted.",
+    example: {
+      problem: "14, 21, 35, 56, 82, 119",
+      steps: [
+        "1. Calculate differences between consecutive terms: +7, +14, +21, +26, +37.",
+        "2. Triangulation Rule: One wrong term in a series creates EXACTLY TWO corrupted differences!",
+        "3. +7, +14, +21 are multiples of 7. The bad differences are +26 and +37.",
+        "4. The term sitting between the two bad differences is 82!",
+        "5. Correct term: 56 + 28 = 84 (then 84 + 35 = 119 fits perfectly). Wrong number is 82!"
+      ],
+      result: "82 (should be 84)"
+    }
   }
 ];
 

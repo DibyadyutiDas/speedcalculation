@@ -35,6 +35,8 @@ class AnalyticsManager {
       'Simplification': { solved: 0, correct: 0, totalTime: 0 },
       'Approximation': { solved: 0, correct: 0, totalTime: 0 },
       'Number Series': { solved: 0, correct: 0, totalTime: 0 },
+      'Quadratic Equations': { solved: 0, correct: 0, totalTime: 0 },
+      'Wrong Number Series': { solved: 0, correct: 0, totalTime: 0 },
       // Reasoning Categories
       'Reasoning: Inequalities': { solved: 0, correct: 0, totalTime: 0 },
       'Reasoning: Syllogisms': { solved: 0, correct: 0, totalTime: 0 },
@@ -160,8 +162,9 @@ class AnalyticsManager {
   getGrade(cpm, accuracy) {
     if (accuracy < 70) return 'Needs Accuracy Focus';
     if (cpm >= 50 && accuracy >= 90) return '🔥 Top 1% Banker';
-    if (cpm >= 35 && accuracy >= 85) return '⚡ SBI PO Ready';
-    if (cpm >= 25 && accuracy >= 80) return 'Clerk Prelims Ready';
+    if (cpm >= 38 && accuracy >= 88) return '🌾 RRB PO Scale 1 Ready';
+    if (cpm >= 32 && accuracy >= 82) return '⚡ Bank PO Prelims Ready';
+    if (cpm >= 24 && accuracy >= 80) return 'Clerk / Assistant Ready';
     return 'Developing Speed';
   }
 
@@ -548,6 +551,20 @@ class AnalyticsManager {
       }
       if (badge) badge.style.display = 'none';
       this.renderSpeedAccGraph(sessions, container);
+    } else if (this.currentGraphType === 'rrb-cutoff') {
+      if (legendGroup) {
+        legendGroup.innerHTML = `
+          <div class="legend-chip"><span class="legend-dot-sq" style="background:#137333;"></span> Cleared Cutoff (Safe)</div>
+          <div class="legend-chip"><span class="legend-dot-sq" style="background:#f9ab00;"></span> Borderline Range</div>
+          <div class="legend-chip"><span class="legend-dot-sq" style="background:#d93025;"></span> Below Cutoff</div>
+          <div class="legend-chip"><span class="legend-dot-sq" style="background:#1a73e8;"></span> Projected RRB PO Score</div>
+        `;
+      }
+      if (badge) {
+        badge.style.display = 'inline-flex';
+        badge.innerHTML = `<span class="benchmark-dot" style="background:#137333;"></span><span class="benchmark-text">RRB PO National Avg Cutoff: <strong>56.5 / 80</strong></span>`;
+      }
+      this.renderRrbCutoffGraph(sessions, container);
     } else if (this.currentGraphType === 'category') {
       if (legendGroup) {
         legendGroup.innerHTML = `
@@ -766,6 +783,101 @@ class AnalyticsManager {
     `;
   }
 
+  // ==========================================
+  // RRB PO STATE-WISE CUTOFF & SCORE PREDICTOR
+  // ==========================================
+  renderRrbCutoffGraph(sessions, container) {
+    const W = 800, H = 310;
+    const padL = 140, padR = 40, padT = 30, padB = 40;
+    const plotW = W - padL - padR;
+    const plotH = H - padT - padB;
+
+    // Major RRB PO State Cutoffs (Out of 80 Marks in 45 Mins Prelims)
+    const stateCutoffs = [
+      { state: "Uttar Pradesh", cutoff: 62.50 },
+      { state: "Rajasthan", cutoff: 60.25 },
+      { state: "Haryana", cutoff: 61.75 },
+      { state: "Bihar", cutoff: 56.75 },
+      { state: "Madhya Pradesh", cutoff: 55.25 },
+      { state: "Maharashtra", cutoff: 51.50 },
+      { state: "Gujarat", cutoff: 50.00 }
+    ];
+
+    // Estimate Projected Score on 80-Mark RRB PO Prelims scale:
+    // In 45 mins (2700s), an aspirant with current CPM (velocity) and accuracy would attempt:
+    // Est Attempts = CPM * 45 * 0.45 (factoring in question reading/switching latency) capped at 80
+    let userBestCpm = this.data.bestCPM || 25;
+    let userAcc = this.getOverallAccuracy() || 85;
+    if (sessions && sessions.length > 0) {
+      const recent = sessions.slice(0, 5);
+      userBestCpm = Math.round(recent.reduce((a, b) => a + b.cpm, 0) / recent.length);
+      userAcc = Math.round(recent.reduce((a, b) => a + b.accuracy, 0) / recent.length);
+    }
+
+    // RRB PO 45-min Realistic Attempts Model:
+    // High performers at 35 CPM attempt ~60-65 Qs in 45 mins.
+    const estAttempts = Math.min(80, Math.max(15, Math.round(userBestCpm * 1.65)));
+    const estCorrect = Math.round(estAttempts * (userAcc / 100));
+    const estWrong = estAttempts - estCorrect;
+    const projectedScore = Math.max(0, +(estCorrect * 1.0 - estWrong * 0.25).toFixed(2));
+
+    const minScore = 40, maxScore = 80;
+    const getX = (val) => padL + ((Math.min(maxScore, Math.max(minScore, val)) - minScore) / (maxScore - minScore)) * plotW;
+    const rowH = plotH / stateCutoffs.length;
+
+    let barsSvg = '';
+    stateCutoffs.forEach((item, idx) => {
+      const y = padT + idx * rowH;
+      const barW = getX(item.cutoff) - padL;
+      const isCleared = projectedScore >= item.cutoff;
+      const isBorder = Math.abs(projectedScore - item.cutoff) <= 3 && !isCleared;
+      const barColor = isCleared ? '#137333' : (isBorder ? '#f9ab00' : '#d93025');
+
+      const tip = `<strong>${item.state} (RRB PO Scale 1)</strong><br>Cutoff Benchmark: <strong>${item.cutoff} / 80</strong><br>Your Projected Score: <strong>${projectedScore} / 80</strong><br>Status: <strong>${isCleared ? '✓ QUALIFIED' : (isBorder ? '⚠️ BORDERLINE' : '✗ BELOW CUTOFF')}</strong>`;
+
+      barsSvg += `
+        <!-- State Label -->
+        <text x="${padL - 10}" y="${y + rowH * 0.6}" fill="var(--text-primary)" font-size="11" font-weight="600" text-anchor="end">${item.state}</text>
+        
+        <!-- State Cutoff Bar Track -->
+        <rect x="${padL}" y="${y + 5}" width="${Math.max(4, barW)}" height="${rowH * 0.5}" fill="${barColor}" opacity="0.8" rx="3"
+          onmouseenter="window.analyticsManager.showTooltip(event, '${tip}')"
+          onmousemove="window.analyticsManager.showTooltip(event, '${tip}')"
+          onmouseleave="window.analyticsManager.hideTooltip()" />
+        <text x="${padL + barW + 8}" y="${y + rowH * 0.6}" fill="var(--text-secondary)" font-size="11" font-weight="600">${item.cutoff}</text>
+      `;
+    });
+
+    // Projected User Score Reference Vertical Marker
+    const userMarkerX = getX(projectedScore);
+    const userMarkerSvg = `
+      <line x1="${userMarkerX}" y1="${padT - 8}" x2="${userMarkerX}" y2="${padT + plotH}" stroke="#1a73e8" stroke-width="2.5" stroke-dasharray="4,2" />
+      <rect x="${userMarkerX - 48}" y="${padT - 25}" width="96" height="20" rx="3" fill="#1a73e8" />
+      <text x="${userMarkerX}" y="${padT - 11}" fill="#ffffff" font-size="10.5" font-weight="700" text-anchor="middle">You: ${projectedScore}</text>
+    `;
+
+    // Scale Ticks at bottom
+    let axisTicks = '';
+    [40, 50, 60, 70, 80].forEach(t => {
+      const tx = getX(t);
+      axisTicks += `
+        <line x1="${tx}" y1="${padT + plotH}" x2="${tx}" y2="${padT + plotH + 5}" stroke="var(--border-strong)" stroke-width="1" />
+        <text x="${tx}" y="${padT + plotH + 18}" fill="var(--text-tertiary)" font-size="10" text-anchor="middle">${t}M</text>
+      `;
+    });
+
+    container.innerHTML = `
+      <svg viewBox="0 0 ${W} ${H}">
+        <!-- Axes -->
+        <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT + plotH}" stroke="var(--border-color)" stroke-width="1.5" />
+        <line x1="${padL}" y1="${padT + plotH}" x2="${W - padR}" y2="${padT + plotH}" stroke="var(--border-color)" stroke-width="1.5" />
+        ${axisTicks}
+        ${barsSvg}
+        ${userMarkerSvg}
+      </svg>
+    `;
+  }
+
   renderCategoryGraph(container) {
     const W = 800, H = 300;
     const padL = 170, padR = 40, padT = 25, padB = 30;
@@ -966,24 +1078,25 @@ class AnalyticsManager {
       velSub.textContent = 'Stable momentum =';
     }
 
-    // 2. Cutoff Readiness
+    // 2. Cutoff Readiness (RRB PO Scale: 56.5/80 | SBI PO Scale: 38 CPM)
     const best = this.data.bestCPM;
-    if (best >= 45) {
-      cutEl.textContent = 'RBI / Mains Tier';
+    const estScore80 = Math.min(80, Math.round(best * 1.55 * (this.getOverallAccuracy() / 100)));
+    if (best >= 42) {
+      cutEl.textContent = `RRB PO Safe (${estScore80}/80)`;
       cutEl.style.color = '#1e8e3e';
-      cutSub.textContent = 'Exceeds all prelim cutoffs';
-    } else if (best >= 38) {
-      cutEl.textContent = 'PO Prelims Ready';
+      cutSub.textContent = 'Clears UP/Rajasthan 62+ tier';
+    } else if (best >= 35) {
+      cutEl.textContent = `PO Qualified (${estScore80}/80)`;
       cutEl.style.color = '#1e8e3e';
-      cutSub.textContent = '35 Qs in 20 min feasible';
-    } else if (best >= 30) {
-      cutEl.textContent = 'Clerk Qualified';
+      cutSub.textContent = 'Clears MP/Bihar cutoffs (55+)';
+    } else if (best >= 28) {
+      cutEl.textContent = `Borderline (${estScore80}/80)`;
       cutEl.style.color = '#1a73e8';
-      cutSub.textContent = `${38 - best} CPM to PO standard`;
+      cutSub.textContent = `${Math.max(1, 57 - estScore80)} Marks to safe national cutoff`;
     } else {
-      cutEl.textContent = `${38 - best} CPM Gap`;
+      cutEl.textContent = `Foundation (${estScore80}/80)`;
       cutEl.style.color = '#f9ab00';
-      cutSub.textContent = 'Accelerate foundations';
+      cutSub.textContent = 'Target 35+ CPM for RRB PO';
     }
 
     // 3. Accuracy Stability

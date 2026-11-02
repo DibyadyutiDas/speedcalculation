@@ -121,6 +121,72 @@ const REASONING_RULES = [
         "2. '2 boxes between A and C' => |pos(A) - pos(C)| = 3 (Layout: A [ ] [ ] C or C [ ] [ ] A)."
       ]
     }
+  },
+  {
+    id: "question_phrasing_traps_puzzle",
+    title: "7. Puzzle & Seating Phrasing Master (Normal vs Tricky vs Repeated)",
+    badge: "Prelims & Mains Traps",
+    category: "Exam Phrasing Traps",
+    summary: "Instant decoding guide for the most tricky & frequently repeated sentence structures in banking puzzles.",
+    rules: [
+      "TRICKY (Pronoun Attachment): 'A is 2nd to the left of B, WHO sits 3rd to right of C' -> 'WHO/WHOM/WHICH' always qualifies the IMMEDIATE PRECEDING PERSON (B, NOT A!).",
+      "TRICKY (Conjunction Attachment): 'A is 2nd to the left of B, AND/BUT sits 3rd to right of C' -> 'AND/BUT/WHILE' always qualifies the FIRST/PRIMARY PERSON (A, NOT B!).",
+      "REPEATED (Neither-Nor Neighbor): 'P sits neither adjacent to Q nor opposite to R' -> P cannot sit in Q's immediate left/right chairs, AND cannot be directly opposite R.",
+      "TRICKY (Flank Balance): 'Number of persons to left of P is one more than number of persons to right of Q' -> LeftCount(P) = RightCount(Q) + 1.",
+      "NORMAL VS TRICKY (Same vs Different Flat): 'A lives on floor immediately above B in the SAME flat' vs 'A lives immediately above B (could be same or different flat unless specified)'.",
+      "REPEATED (Alphabetical/Order Constraint): 'No two persons whose names start with consecutive letters sit adjacent' -> A cannot sit beside B, C cannot sit beside B or D."
+    ],
+    example: {
+      statement: "P sits 3rd to right of Q, who sits 2nd to left of R, and is facing outside.",
+      conclusions: [
+        "1. 'who sits 2nd to left of R' -> Refers directly to Q (Q is 2nd to left of R).",
+        "2. 'and is facing outside' -> Refers back to the 1st person P (P faces outside)!"
+      ]
+    }
+  },
+  {
+    id: "question_phrasing_traps_quant",
+    title: "8. Quant & Word Problem Phrasing (Normal, Tricky, Repeated)",
+    badge: "Quant Velocity Hack",
+    category: "Exam Phrasing Traps",
+    summary: "Clear mathematical translation of ambiguous bank word problem & data interpretation phrasings.",
+    rules: [
+      "TRICKY: 'A is 25% MORE than B' -> A = 1.25 × B = (5/4)B. BUT 'A is 25% OF B' -> A = 0.25 × B = (1/4)B. Do NOT confuse 'more than' with 'of'!",
+      "REPEATED: 'B is what % LESS than A?' (where A is 25% more than B) -> Base changes! Less% = (Diff / A) × 100 = (1/5) × 100 = 20% less.",
+      "TRICKY (Speed & Stream): 'Downstream speed' = Speed in still water (u) + Stream (v). 'Upstream speed' = u - v. If 'A takes twice as long upstream as downstream', then (u - v) × 2 = (u + v) -> u = 3v.",
+      "NORMAL: 'A and B start moving towards each other' -> Opposite directions, Relative speed = Speed(A) + Speed(B). 'Moving in same direction' -> Relative speed = |Speed(A) - Speed(B)|.",
+      "REPEATED (Work & Efficiency): 'A is 60% more efficient than B' -> Efficiency ratio E(A):E(B) = 160:100 = 8:5. Time taken ratio T(A):T(B) = 5:8 (Inverse of efficiency!).",
+      "TRICKY (Ratios): 'A is divided between P and Q in ratio 3:4. If 10 is added to P...' -> Set P = 3x, Q = 4x; (3x + 10)/4x."
+    ],
+    example: {
+      statement: "Income of Raman is 33.33% more than Aman. By what percentage is Aman's income less than Raman's?",
+      conclusions: [
+        "1. Raman = (1 + 1/3) Aman = (4/3) Aman -> Raman : Aman = 4 : 3.",
+        "2. Aman is less by 1 unit on base 4: (1 / 4) × 100 = 25% less!"
+      ]
+    }
+  },
+  {
+    id: "question_phrasing_traps_syllogism_inequality",
+    title: "9. Syllogism & Inequality Tricky Phrasing ('Only', 'None But', 'Not Less')",
+    badge: "100% Accuracy Shield",
+    category: "Exam Phrasing Traps",
+    summary: "Decode archaic and tricky banking quantifiers and inequality comparison phrases.",
+    rules: [
+      "TRICKY (Only A are B): Means 'ALL B are A' with an EXCLUSIVE lock! No other entity except A can ever overlap with B.",
+      "REPEATED (None but / None except A is B): Exactly identical to 'Only A are B' (All B are A exclusively).",
+      "TRICKY (Each / Every / Any): All treated strictly as 'ALL'. 'At least some / Almost all / Generally / 99%': All treated strictly as 'SOME'.",
+      "REPEATED (All... can never be): Equivalent to definite 'SOME... ARE NOT'. (Not a possibility, it is a 100% definite statement!).",
+      "NORMAL TO TRICKY (Inequality Phrasing): 'A is not less than B' means A >= B. 'A is neither greater than nor equal to B' means A < B.",
+      "REPEATED: 'A is not smaller than B and not greater than C' means B <= A <= C."
+    ],
+    example: {
+      statement: "Statements: Only Gold are Platinum. Some Gold are Silver.",
+      conclusions: [
+        "I. Some Platinum are Silver (DEFINITELY FALSE - Platinum can NEVER touch Silver due to 'Only Gold')",
+        "II. All Platinum are Gold (DEFINITELY TRUE - 'Only Gold are Platinum' means All Platinum are Gold)"
+      ]
+    }
   }
 ];
 
@@ -140,7 +206,7 @@ class ReasoningEngine {
 
   // Generate Bank Reasoning Questions by Topic & Level
   generateQuestion(category = 'all', level = 'all') {
-    const topics = ['puzzle_basics', 'inequalities', 'syllogisms', 'alphabet', 'direction', 'blood_relations'];
+    const topics = ['puzzle_basics', 'phrasing_traps', 'inequalities', 'syllogisms', 'alphabet', 'direction', 'blood_relations'];
     let chosenTopic = category;
     if (!chosenTopic || chosenTopic === 'all') {
       chosenTopic = topics[Math.floor(Math.random() * topics.length)];
@@ -153,6 +219,7 @@ class ReasoningEngine {
     }
 
     if (chosenTopic === 'puzzle_basics') return this.generatePuzzleBasics(chosenLevel);
+    if (chosenTopic === 'phrasing_traps') return this.generatePhrasingTraps(chosenLevel);
     if (chosenTopic === 'inequalities') return this.generateInequality(chosenLevel);
     if (chosenTopic === 'syllogisms') return this.generateSyllogism(chosenLevel);
     if (chosenTopic === 'alphabet') return this.generateAlphabet(chosenLevel);
@@ -885,6 +952,236 @@ class ReasoningEngine {
       levelLabel: levelBadges[level] || "PO Prelims",
       topicLabel: "Puzzle Clue Basics",
       title: `${item.title} — ${levelBadges[level] || level.toUpperCase()}`,
+      statement: item.text,
+      conclusions: item.conclusions,
+      options: item.options,
+      correctIndex: item.ansIndex,
+      correctAnswer: item.options[item.ansIndex],
+      explanation: item.explanation
+    };
+  }
+
+  // 7. Exam Phrasing Traps Generator (Normal, Tricky, Repeated Patterns in Puzzles, Quant & Syllogisms)
+  generatePhrasingTraps(level = 'moderate') {
+    const levelBadges = {
+      easy: "Clerk Prelims (Level 1)",
+      moderate: "SBI/IBPS PO Prelims (Level 2)",
+      hard: "PO Mains / Advanced (Level 3)"
+    };
+
+    const banks = {
+      easy: [
+        {
+          title: "Tricky Phrasing: 'WHO' vs 'AND' Connection Trap",
+          typeCategory: "Tricky Phrasing",
+          text: "Question Sentence: 'A sits 3rd to the left of B, who sits 2nd to the right of C.' In this sentence, which person does 'who' refer to?",
+          conclusions: ["Grammar rule in Bank Seating & Puzzles."],
+          options: [
+            "Person B (The immediately preceding person)",
+            "Person A (The first person mentioned in the clause)",
+            "Person C (The third person mentioned)",
+            "Both A and B together",
+            "Either A or B depending on gender"
+          ],
+          ansIndex: 0,
+          explanation: "TRICKY PHRASING GOLDEN RULE: In bank exam seating clues, relative pronouns ('who', 'which', 'whom', 'whose') ALWAYS refer strictly to the IMMEDIATELY PRECEDING entity (Person B). If the sentence had used 'and' / 'but', it would refer to Person A!"
+        },
+        {
+          title: "Quant Phrasing: '% More Than' vs '% Of'",
+          typeCategory: "Normal vs Tricky",
+          text: "Quant Clue: 'Salary of Rohan is 25% MORE THAN Sohan.' If Sohan earns Rs 40,000, what is Rohan's salary?",
+          conclusions: ["Differentiating 'x% of' from 'x% more than'."],
+          options: [
+            "Rs 50,000 (Rohan = 125% of Sohan)",
+            "Rs 10,000 (25% of 40,000)",
+            "Rs 30,000 (75% of 40,000)",
+            "Rs 45,000",
+            "Rs 55,000"
+          ],
+          ansIndex: 0,
+          explanation: "REPEATED EXAM TRAP: '25% more than Sohan' means Rohan = Sohan + 25% of Sohan = 1.25 × 40,000 = Rs 50,000. '25% of Sohan' would be only Rs 10,000!"
+        },
+        {
+          title: "Normal Phrasing: 'Immediately Preceded By' in Series",
+          typeCategory: "Normal Phrasing",
+          text: "In an alphanumeric series: 'How many numbers are IMMEDIATELY PRECEDED by a vowel?' In what sequential order must this pattern appear?",
+          conclusions: ["Preceded vs Followed positional sequence."],
+          options: [
+            "[Vowel] followed immediately by [Number] (Order: Vowel -> Number)",
+            "[Number] followed immediately by [Vowel] (Order: Number -> Vowel)",
+            "Vowel anywhere before the number",
+            "Number must be on the left of vowel",
+            "Vowel and number with exactly 1 symbol between them"
+          ],
+          ansIndex: 0,
+          explanation: "STANDARD CONVENTION: 'Preceded by X' means X comes BEFORE (to the left of) the target. So 'Number preceded by Vowel' = [Vowel][Number]. Conversely, 'followed by Y' means Y comes AFTER (to the right)."
+        },
+        {
+          title: "Syllogism Phrasing: 'Every' / 'Each' / 'Any'",
+          typeCategory: "Repeated Phrasing",
+          text: "Statement: 'Each Officer is an Analyst.' In standard syllogisms, how is the quantifier 'Each' / 'Every' / 'Any' interpreted?",
+          conclusions: ["Translating everyday English quantifiers to categorical logic."],
+          options: [
+            "Strictly as 'ALL' (All Officers are Analysts)",
+            "Strictly as 'SOME' (Some Officers are Analysts)",
+            "As 'ONLY A FEW' (Some are, some are not)",
+            "As a Possibility only",
+            "As 'NO' (No Officer is an Analyst)"
+          ],
+          ansIndex: 0,
+          explanation: "REPEATED RULE: In bank syllogisms, 'Each', 'Every', 'Any', '100%' are all mathematically identical to 'ALL'. 'At least some', 'Generally', 'Most', 'Almost all', '99%' are all mathematically treated as 'SOME'."
+        }
+      ],
+      moderate: [
+        {
+          title: "Tricky Phrasing: Base Reversal in Percentage Comparison",
+          typeCategory: "Tricky & Repeated",
+          text: "Arithmetic / DI Trap: 'A's score is 20% MORE than B's score.' By what percentage is B's score LESS than A's score?",
+          conclusions: ["Base shifting from B to A."],
+          options: [
+            "16.67% (16 2/3%)",
+            "20.00%",
+            "25.00%",
+            "15.00%",
+            "18.75%"
+          ],
+          ansIndex: 0,
+          explanation: "MOST REPEATED BANK TRAP: If A = B × (6/5), then A : B = 6 : 5. Difference = 1 unit. When asking 'less than A', the base denominator is A (6): (1 / 6) × 100 = 16.67% (NOT 20%)!"
+        },
+        {
+          title: "Tricky Phrasing: 'Only A are B' Syllogism Lock",
+          typeCategory: "Tricky Phrasing",
+          text: "Statement: 'Only Mangoes are Sweet. Some Mangoes are Ripe.' Conclusion: 'Some Sweet being Ripe is a possibility.' Does this conclusion follow?",
+          conclusions: ["Exclusive lock on the predicate in 'Only A are B'."],
+          options: [
+            "Does NOT follow (Definitely False - Sweet can only ever belong to Mangoes)",
+            "Follows (Possibility is always true when no negative relation is mentioned)",
+            "Either follows or does not follow",
+            "Follows only if all Ripe are Mangoes",
+            "Follows definitely without possibility"
+          ],
+          ansIndex: 0,
+          explanation: "GOLDEN SYLLOGISM TRAP: 'Only A are B' translates to 'All B are A' with an EXCLUSIVE lock on B. No element outside A (even other elements partially inside A like Ripe) can ever touch B. Therefore, Sweet CANNOT be Ripe even in a possibility!"
+        },
+        {
+          title: "Puzzle Phrasing: 'Same Flat' vs 'Different Flat'",
+          typeCategory: "Repeated Trap",
+          text: "In a 2-Flat, 3-Floor building puzzle (Flat P to the west of Flat Q): 'Person M lives on the floor immediately above person N.' Without further specification, can M and N live in different flats?",
+          conclusions: ["Floor adjacency vs flat alignment."],
+          options: [
+            "Yes, unless the clue explicitly states 'in the same flat'",
+            "No, they MUST live in the same flat automatically",
+            "No, they MUST live in different flats automatically",
+            "Only if both live in Flat P",
+            "Only if N is on Floor 1"
+          ],
+          ansIndex: 0,
+          explanation: "PO PRELIMS TRAP: 'M lives immediately above N' only fixes Floor(M) = Floor(N) + 1. Unless the clue explicitly specifies 'in the same flat', M could be in Flat P while N is in Flat Q (or vice versa). Always test both flat branches!"
+        },
+        {
+          title: "Inequality Phrasing: 'Neither Greater Nor Equal'",
+          typeCategory: "Normal to Tricky",
+          text: "Coded Inequality Clue: 'P is neither greater than nor equal to Q.' What mathematical relationship does this establish between P and Q?",
+          conclusions: ["Negation of inequality comparison symbols."],
+          options: [
+            "P < Q (P is strictly less than Q)",
+            "P > Q",
+            "P <= Q",
+            "P = Q",
+            "P >= Q"
+          ],
+          ansIndex: 0,
+          explanation: "RULE: The three basic relationships are >, <, and =. Negating '>' and '=' leaves strictly '<'. Hence, 'neither greater than nor equal to' = strictly '<' (Soldier/King in lower path)."
+        },
+        {
+          title: "Time & Distance Phrasing: 'Downstream' vs 'Upstream' Relative Speed",
+          typeCategory: "Normal vs Repeated",
+          text: "Boat problem phrasing: 'A boat's speed in still water is u km/h and stream speed is v km/h.' Which phrase represents speed along the flow vs against the flow?",
+          conclusions: ["Direction of river current."],
+          options: [
+            "Downstream = (u + v) along current; Upstream = (u - v) against current",
+            "Downstream = (u - v); Upstream = (u + v)",
+            "Downstream = u / v; Upstream = v / u",
+            "Downstream = 2u; Upstream = 2v",
+            "Both are equal to (u + v) / 2"
+          ],
+          ansIndex: 0,
+          explanation: "STANDARD QUANT PHRASING: 'Downstream' = moving with the flow of river -> speeds assist each other (u + v). 'Upstream' = moving against the flow -> river opposes boat (u - v)."
+        }
+      ],
+      hard: [
+        {
+          title: "Advanced Puzzle Phrasing: Symmetrical Flank Offset (+1 More Than)",
+          typeCategory: "Tricky Phrasing",
+          text: "In a row of 10 persons facing North: 'The number of persons sitting to the left of P is one more than the number of persons sitting to the right of Q.' If Q sits 3rd from the right end, what is P's position from the left end?",
+          conclusions: ["LeftCount(P) = RightCount(Q) + 1."],
+          options: [
+            "4th from the left end (3 persons to P's left)",
+            "3rd from the left end",
+            "5th from the left end",
+            "2nd from the left end",
+            "6th from the left end"
+          ],
+          ansIndex: 0,
+          explanation: "ADVANCED MAINS PUZZLE EQUATION: Q is 3rd from the right end, which means there are exactly 2 persons to Q's right (RightCount = 2). The clue states: LeftCount(P) = RightCount(Q) + 1 = 2 + 1 = 3 persons. Having 3 persons to P's left means P sits at position 4 from the left end!"
+        },
+        {
+          title: "Tricky Syllogism: 'All A Can Never Be B'",
+          typeCategory: "Tricky & Repeated",
+          text: "In SBI PO Mains, a conclusion asks: 'All Doctors can never be Engineers.' How is this statement structurally evaluated in syllogism deduction?",
+          conclusions: ["Differentiating possibility from definite negative."],
+          options: [
+            "As a 100% DEFINITE conclusion: 'Some Doctors are NOT Engineers'",
+            "As a possibility: 'It is possible that no Doctors are Engineers'",
+            "As a universal negative: 'No Doctors are Engineers'",
+            "As an affirmative universal: 'All Doctors are Engineers'",
+            "Cannot be evaluated without Venn diagrams"
+          ],
+          ansIndex: 0,
+          explanation: "CLASSIC BANK EXAM CONFUSION: Although it contains the word 'can', 'All X can NEVER be Y' is NOT a possibility question! It is a 100% DEFINITE conclusion meaning 'It is impossible for all X to be Y', which is mathematically identical to checking if 'SOME X ARE NOT Y' definitely holds!"
+        },
+        {
+          title: "Mains Puzzle Trap: Consecutive Alphabetical Constraint",
+          typeCategory: "Tricky Phrasing",
+          text: "Circular Seating Clue (8 persons A, B, C, D, E, F, G, H): 'No two persons whose names start with consecutive letters sit adjacent to each other.' If person C sits in seat 3, which of the following seats CANNOT be occupied by D or B?",
+          conclusions: ["Adjacent seats are 2 and 4."],
+          options: [
+            "Neither Seat 2 nor Seat 4 (both adjacent to Seat 3)",
+            "Only Seat 4",
+            "Only Seat 2",
+            "Seat 7 (directly opposite)",
+            "Any seat except Seat 1"
+          ],
+          ansIndex: 0,
+          explanation: "VERY COMMON PO MAINS CLUE: 'Consecutive letters' means alphabetical neighbors (B and D are consecutive to C; C and E are consecutive to D, etc.). Since C is in seat 3, adjacent seats 2 and 4 cannot have B or D!"
+        },
+        {
+          title: "Work & Efficiency Phrasing: '60% More Efficient'",
+          typeCategory: "Quant Tricky Phrasing",
+          text: "Time & Work clue: 'Pipe A is 60% MORE EFFICIENT than Pipe B. Pipe B alone can fill a tank in 40 hours.' In how many hours will Pipe A alone fill the tank?",
+          conclusions: ["Efficiency ratio is inverse to Time ratio."],
+          options: [
+            "25 hours (Time(A) = 40 × (5/8))",
+            "16 hours",
+            "24 hours",
+            "32 hours",
+            "30 hours"
+          ],
+          ansIndex: 0,
+          explanation: "REPEATED QUANT TRICK: Efficiency(A) : Efficiency(B) = 160 : 100 = 8 : 5. Since work = efficiency × time, Time(A) : Time(B) is the INVERSE ratio = 5 : 8. If 8 units = 40 hours (multiplier = 5), then 5 units = 5 × 5 = 25 hours!"
+        }
+      ]
+    };
+
+    const pool = banks[level] || banks.moderate;
+    const item = pool[Math.floor(Math.random() * pool.length)];
+
+    return {
+      type: "phrasing_traps",
+      level: level,
+      levelLabel: levelBadges[level] || "PO Prelims",
+      topicLabel: "Exam Phrasing Traps",
+      title: `${item.title} [${item.typeCategory}]`,
       statement: item.text,
       conclusions: item.conclusions,
       options: item.options,

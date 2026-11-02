@@ -16,7 +16,9 @@ A modern web application specifically engineered to boost calculation speed for 
      - Fraction to % Reciprocals ($1/2$ to $1/25$ with crucial multiples: $3/8$, $5/8$, $4/7$, $5/6$, $11/12$)
      - Authentic Bank Simplifications (BODMAS with missing variable `?`)
      - Approximations with 5 TCS iON-style multiple choice options
+     - ⚖️ **Quadratic Equations Comparison ($x$ vs $y$)** (RRB PO mandatory 5 Qs with 2-second constant sign shortcuts)
      - Missing Number Series (multiplication + constant, squares/cubes diff, double diff)
+     - ❌ **Wrong Number Series** (Intruder detection using dual difference triangulation)
      - Mixed Comprehensive Bank Drill
    - **Workout Modes**:
      - 60-Second Sprint, 2-Minute Blitz, 5-Minute Marathon
@@ -28,19 +30,21 @@ A modern web application specifically engineered to boost calculation speed for 
    - Flashes numbers rapidly on the screen (configurable speed: 350ms to 1200ms).
    - Trains automatic subconscious addition reflexes without paper.
 
-3. **📝 TCS iON Bank Exam Mock Simulator**:
-   - 15 authentic bank prelims questions in 10 minutes.
+3. **📝 TCS iON Bank Exam Mock Simulator (RRB PO Composite + SBI PO)**:
+   - 🌾 **RRB PO 40-Q Composite Simulator (22 Mins)**: 20 Quant + 20 Reasoning with real-time section switching (⚡ Quant ⇄ 🧠 Reasoning), replicating the exact RRB Officer Scale 1 composite environment.
+   - 🏛️ **SBI/IBPS 15-Q Quant Speed Drill (10 Mins)**: Strict 10-minute speed math sprint.
    - Exact exam scoring ($+1$ for correct, $-0.25$ for wrong answers).
-   - Interactive Question Palette (Answered, Not Answered, Marked for Review, Not Visited).
-   - Cutoff benchmark feedback comparing your score to real SBI PO Prelims cutoffs.
+   - Interactive Question Palette with section indicators (`sec-quant`, `sec-reasoning`).
+   - Cutoff benchmark feedback comparing your projected score to real **RRB PO State Cutoffs (54–62 / 80)**.
 
 4. **🧠 High-Yield Vedic Shortcuts Sandbox**:
-   - Explains the exact mental shortcuts used by toppers (Base 100, Ekadhikena Purvena, Criss-Cross, Power of 10 Split, Percentage Interchange Rule).
+   - Explains the exact mental shortcuts used by toppers (Base 100, Ekadhikena Purvena, Criss-Cross, Power of 10 Split, Percentage Interchange Rule, 2-Second Quadratic Sign Inversion).
    - "Practice This Pattern in Arena" button for immediate reinforcement.
 
 5. **🧠 Bank Reasoning Ability Speed Engine (Partitioned by Topic & Level)**:
    - **Topics Covered**:
      - 🧩 Puzzle Clue Basics ("N Away", "N Between", Floor/Box Gaps, Circular Clockwise/Counter-Clockwise)
+     - 🎯 Exam Phrasing Traps (Tricky, Repeated & Normal: Pronoun "Who" vs "And", Same Flat vs Different Flat, Consecutive restrictions, "% More than" vs "% Of", Relative Speed, "Only" Syllogism locks)
      - 👑 Inequalities (King-Queen-Soldier Priority, Definite False Blocked Paths, Either-Or)
      - ⭕ Syllogisms ("Only a few", "All can never be", Possibility overlap, Either-Or)
      - 🔤 Alphabet & Series (Forward/Reverse, EJOTY Anchors, Opposite Pairs, Relative Shift, Alphanumerics)
@@ -55,14 +59,15 @@ A modern web application specifically engineered to boost calculation speed for 
      - Immediate step-by-step logical proof after answering.
      - Save & Log Drill Session directly into performance tracking.
 
-6. **📈 Cross-Website Performance Telemetry & Graph Analytics Studio**:
+6. **📈 Advanced Data Analytics & RRB PO Performance Telemetry Studio**:
    - **Interactive Multi-Mode Graphs**:
      - 📈 **Speed (CPM) Progression Trend**: Chronological velocity curve with SBI PO cutoff (38 CPM) and RBI benchmark (45 CPM) reference lines, with Quant vs Reasoning color-coded nodes.
      - 🎯 **Speed vs Accuracy (Quadrant Scatter)**: Plots sessions across 4 key exam zones (PO Qualified, Accurate but Slow, Speed over Accuracy, Needs Foundation).
-     - 📊 **Category Proficiency**: Horizontal speed and accuracy bars across both Quant and Reasoning categories.
-     - ⏱️ **Pace Consistency**: Fastest, average, and slowest response time range analysis.
+     - 🌾 **RRB PO Score Predictor & State Cutoff Matrix**: Projects your 45-minute exam performance onto the real 80-mark RRB PO scale and evaluates status across major states (UP 62.5, Rajasthan 60.25, Haryana 61.75, Bihar 56.75, MP 55.25, Maharashtra 51.5, Gujarat 50.0).
+     - 📊 **Category Proficiency**: Horizontal speed and accuracy bars across all 15 Quant and Reasoning categories.
+     - ⏱️ **Pace Consistency**: Fastest, average, and slowest response latency range analysis.
    - **Section Filter**: View Unified performance across all drills, or filter by ⚡ Quant Speed or 🧠 Reasoning Speed independently.
-   - **Deep Diagnostics**: Speed Velocity, Cutoff Readiness, Accuracy Stability, and Priority Focus recommendation.
+   - **Deep Diagnostics**: Speed Velocity, RRB PO Cutoff Readiness (80M projection), Accuracy Stability (Standard deviation & error variance), and Priority Focus recommendations.
    - **Mistake Notebook & History**: Session breakdown with date, category, difficulty level, CPM, and grade.
    - **Data Management**: Export analytics to JSON or reset history.
 

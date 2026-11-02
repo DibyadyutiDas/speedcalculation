@@ -38,12 +38,17 @@ document.addEventListener('DOMContentLoaded', () => {
     flashCorrectSum: 0,
 
     // Exam Mock State
+    examType: 'rrb_po', // 'rrb_po' (40 Qs, 22 mins, composite) or 'sbi_po' (15 Qs, 10 mins)
     examActive: false,
     examTimer: null,
-    examTimeLeft: 600, // 10 minutes
+    examTimeLeft: 1320, // 22 minutes (1320s) for 40-Q RRB PO simulator
+    examTotalTime: 1320,
     examQuestions: [],
     examCurrentIndex: 0,
     examAnswers: {}, // index -> { selectedOpt, status: 'answered' | 'marked' | 'unanswered' }
+    examCurrentSection: 'quant', // 'quant' or 'reasoning'
+    quantTimeSec: 0,
+    reasoningTimeSec: 0,
 
     // Reasoning State
     reasoningTopic: 'all',
@@ -152,6 +157,15 @@ document.addEventListener('DOMContentLoaded', () => {
     examMarkBtn: document.getElementById('exam-mark-btn'),
     examClearBtn: document.getElementById('exam-clear-btn'),
     examResultReport: document.getElementById('exam-result-report'),
+    examSectionNav: document.getElementById('exam-section-nav'),
+    examSecQuantBtn: document.getElementById('exam-sec-quant-btn'),
+    examSecReasoningBtn: document.getElementById('exam-sec-reasoning-btn'),
+    modeRrbPoBtn: document.getElementById('mode-rrb-po-btn'),
+    modeSbiPoBtn: document.getElementById('mode-sbi-po-btn'),
+    examWelcomeDetails: document.getElementById('exam-welcome-details'),
+    examMainTitle: document.getElementById('exam-main-title'),
+    examSubTitle: document.getElementById('exam-sub-title'),
+    examLogoIcon: document.getElementById('exam-logo-icon'),
 
     // Shortcuts & Charts & Analytics DOM
     shortcutsGrid: document.getElementById('shortcuts-grid'),
@@ -1026,29 +1040,116 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ==========================================
-  // 6. BANK EXAM MOCK SIMULATOR (15 Questions)
+  // 6. BANK EXAM MOCK SIMULATOR (RRB PO & SBI PO)
   // ==========================================
+  // Mode selection listeners
+  if (dom.modeRrbPoBtn && dom.modeSbiPoBtn) {
+    dom.modeRrbPoBtn.addEventListener('click', () => {
+      state.examType = 'rrb_po';
+      dom.modeRrbPoBtn.classList.add('active');
+      dom.modeSbiPoBtn.classList.remove('active');
+      if (dom.examMainTitle) dom.examMainTitle.textContent = 'RRB PO PRELIMS SPEED SIMULATOR';
+      if (dom.examSubTitle) dom.examSubTitle.textContent = 'Quantitative Aptitude & Reasoning Speed Assessment';
+      if (dom.examLogoIcon) dom.examLogoIcon.textContent = '🌾';
+      if (dom.examClock) dom.examClock.textContent = '22:00';
+      if (dom.examWelcomeDetails) {
+        dom.examWelcomeDetails.innerHTML = `
+          <h3>🌾 RRB PO (Officer Scale 1) Authentic Prelims Simulator</h3>
+          <ul>
+            <li><strong>Composite Time Flow</strong>: 40 questions total (20 Quant + 20 Reasoning) with real-time section switching.</li>
+            <li><strong>Target High-Yield Quant</strong>: Quadratic Equations (x vs y), Wrong &amp; Missing Series, Approximations, BODMAS.</li>
+            <li><strong>Target Speed Reasoning</strong>: Syllogisms ("Only a Few"), Inequalities (King-Queen), Directions, Family Trees, Order &amp; Ranking.</li>
+            <li><strong>Marking Scheme</strong>: +1.0 for Correct, -0.25 for Incorrect. Benchmarked against real <strong>RRB PO State Cutoffs (54–62 / 80)</strong>.</li>
+          </ul>
+        `;
+      }
+    });
+
+    dom.modeSbiPoBtn.addEventListener('click', () => {
+      state.examType = 'sbi_po';
+      dom.modeSbiPoBtn.classList.add('active');
+      dom.modeRrbPoBtn.classList.remove('active');
+      if (dom.examMainTitle) dom.examMainTitle.textContent = 'SBI / IBPS PO PRELIMS QUANT SPEED ROUND';
+      if (dom.examSubTitle) dom.examSubTitle.textContent = 'Simplification, Approximation, Quadratics & Number Series';
+      if (dom.examLogoIcon) dom.examLogoIcon.textContent = '🏛️';
+      if (dom.examClock) dom.examClock.textContent = '10:00';
+      if (dom.examWelcomeDetails) {
+        dom.examWelcomeDetails.innerHTML = `
+          <h3>🏛️ SBI / IBPS PO 15-Question Quant Speed Round</h3>
+          <ul>
+            <li><strong>Questions</strong>: 15 High-Yield Quantitative questions (Approximations, Simplifications, Quadratics, Series).</li>
+            <li><strong>Time Limit</strong>: 10:00 Minutes strict sectional countdown.</li>
+            <li><strong>Marking Scheme</strong>: +1.0 for Correct, -0.25 for Incorrect. Benchmarked against SBI PO Quant Prelims standard cutoff (8.5–10 marks).</li>
+          </ul>
+        `;
+      }
+    });
+  }
+
   function startBankExam() {
     state.examActive = true;
-    state.examTimeLeft = 600; // 10 minutes
-    state.examCurrentIndex = 0;
     state.examAnswers = {};
+    state.quantTimeSec = 0;
+    state.reasoningTimeSec = 0;
 
-    // Generate 15 Authentic Bank Questions
-    state.examQuestions = [];
-    for (let i = 0; i < 7; i++) {
-      state.examQuestions.push(window.mathEngine.generate('simplification', 'po'));
-    }
-    for (let i = 0; i < 4; i++) {
-      state.examQuestions.push(window.mathEngine.generate('approximation', 'po'));
-    }
-    for (let i = 0; i < 4; i++) {
-      state.examQuestions.push(window.mathEngine.generate('series', 'po'));
+    if (state.examType === 'rrb_po') {
+      state.examTotalTime = 1320; // 22 minutes (1320 seconds)
+      state.examTimeLeft = 1320;
+      state.examCurrentIndex = 0;
+      state.examCurrentSection = 'quant';
+
+      // Generate 20 Quant questions
+      const quantQs = [];
+      for (let i = 0; i < 5; i++) quantQs.push(window.mathEngine.generate('quadratic', 'po')); // 5 Quadratics
+      for (let i = 0; i < 5; i++) quantQs.push(window.mathEngine.generate('approximation', 'po')); // 5 Approximations
+      for (let i = 0; i < 3; i++) quantQs.push(window.mathEngine.generate('wrong_series', 'po')); // 3 Wrong Series
+      for (let i = 0; i < 3; i++) quantQs.push(window.mathEngine.generate('series', 'po')); // 3 Missing Series
+      for (let i = 0; i < 4; i++) quantQs.push(window.mathEngine.generate('simplification', 'po')); // 4 Simplifications
+      quantQs.forEach(q => q.section = 'quant');
+
+      // Generate 20 Reasoning questions
+      const reasoningQs = [];
+      const topics = ['inequalities', 'syllogisms', 'puzzle_basics', 'direction', 'blood_relations', 'alphabet'];
+      for (let i = 0; i < 20; i++) {
+        const top = topics[i % topics.length];
+        const rq = window.reasoningEngine.generateQuestion(top, 'moderate');
+        // Map reasoning format into exam format
+        reasoningQs.push({
+          type: 'mcq',
+          section: 'reasoning',
+          category: rq.topicLabel || 'Reasoning',
+          difficulty: 'PO',
+          expression: rq.statement + (rq.conclusions && rq.conclusions.length ? '\n' + rq.conclusions.join('\n') : ''),
+          answer: rq.correctAnswer,
+          options: rq.options,
+          hint: rq.explanation
+        });
+      }
+
+      state.examQuestions = [...quantQs, ...reasoningQs];
+
+      if (dom.examSectionNav) dom.examSectionNav.style.display = 'flex';
+      setupSectionSwitchers();
+    } else {
+      // SBI PO 15 Quant questions
+      state.examTotalTime = 600; // 10 minutes
+      state.examTimeLeft = 600;
+      state.examCurrentIndex = 0;
+      state.examCurrentSection = 'quant';
+
+      state.examQuestions = [];
+      for (let i = 0; i < 4; i++) state.examQuestions.push(window.mathEngine.generate('simplification', 'po'));
+      for (let i = 0; i < 4; i++) state.examQuestions.push(window.mathEngine.generate('approximation', 'po'));
+      for (let i = 0; i < 4; i++) state.examQuestions.push(window.mathEngine.generate('quadratic', 'po'));
+      for (let i = 0; i < 3; i++) state.examQuestions.push(window.mathEngine.generate('wrong_series', 'po'));
+      state.examQuestions.forEach(q => q.section = 'quant');
+
+      if (dom.examSectionNav) dom.examSectionNav.style.display = 'none';
     }
 
-    // Ensure all have 5 options (convert input type to 5 MCQ options)
+    // Ensure all questions have 5 options
     state.examQuestions.forEach(q => {
-      if (!q.options) {
+      if (!q.options || q.options.length === 0) {
         const correct = parseInt(q.answer) || 45;
         const diffs = [-8, -4, 0, 5, 12].sort(() => Math.random() - 0.5);
         let opts = diffs.map(d => (correct + d).toString());
@@ -1069,6 +1170,30 @@ document.addEventListener('DOMContentLoaded', () => {
     startExamTimer();
   }
 
+  function setupSectionSwitchers() {
+    if (!dom.examSecQuantBtn || !dom.examSecReasoningBtn) return;
+    dom.examSecQuantBtn.addEventListener('click', () => {
+      saveCurrentExamAnswer(state.examAnswers[state.examCurrentIndex]?.status || 'not-answered');
+      state.examCurrentSection = 'quant';
+      dom.examSecQuantBtn.classList.add('active');
+      dom.examSecReasoningBtn.classList.remove('active');
+      // Jump to first quant question
+      loadExamQuestion(0);
+    });
+
+    dom.examSecReasoningBtn.addEventListener('click', () => {
+      saveCurrentExamAnswer(state.examAnswers[state.examCurrentIndex]?.status || 'not-answered');
+      state.examCurrentSection = 'reasoning';
+      dom.examSecReasoningBtn.classList.add('active');
+      dom.examSecQuantBtn.classList.remove('active');
+      // Jump to first reasoning question (Index 20 in 40-Q mock)
+      const firstReasoningIdx = state.examQuestions.findIndex(q => q.section === 'reasoning');
+      if (firstReasoningIdx !== -1) {
+        loadExamQuestion(firstReasoningIdx);
+      }
+    });
+  }
+
   function startExamTimer() {
     if (state.examTimer) clearInterval(state.examTimer);
 
@@ -1076,6 +1201,15 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!state.examActive) return;
 
       state.examTimeLeft--;
+
+      // Track section time allocation
+      const currentQ = state.examQuestions[state.examCurrentIndex];
+      if (currentQ && currentQ.section === 'reasoning') {
+        state.reasoningTimeSec++;
+      } else {
+        state.quantTimeSec++;
+      }
+
       const mins = Math.floor(state.examTimeLeft / 60);
       const secs = state.examTimeLeft % 60;
       dom.examClock.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
@@ -1092,11 +1226,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function buildExamPalette() {
     dom.examPaletteGrid.innerHTML = '';
-    state.examQuestions.forEach((_, idx) => {
+    state.examQuestions.forEach((q, idx) => {
       const btn = document.createElement('button');
       btn.type = 'button';
-      btn.className = 'pal-btn not-visited';
+      btn.className = `pal-btn not-visited sec-${q.section || 'quant'}`;
       btn.textContent = idx + 1;
+      btn.title = `Q${idx + 1}: ${q.category} (${q.section === 'reasoning' ? 'Reasoning' : 'Quant'})`;
       btn.addEventListener('click', () => {
         saveCurrentExamAnswer(state.examAnswers[state.examCurrentIndex]?.status || 'not-answered');
         loadExamQuestion(idx);
@@ -1108,7 +1243,8 @@ document.addEventListener('DOMContentLoaded', () => {
   function updatePaletteStatus(index, status) {
     const btn = dom.examPaletteGrid.children[index];
     if (!btn) return;
-    btn.className = `pal-btn ${status}`;
+    const q = state.examQuestions[index];
+    btn.className = `pal-btn ${status} sec-${q?.section || 'quant'}`;
     if (index === state.examCurrentIndex) {
       btn.classList.add('current');
     }
@@ -1118,12 +1254,26 @@ document.addEventListener('DOMContentLoaded', () => {
     state.examCurrentIndex = index;
     const q = state.examQuestions[index];
 
+    // Sync section button state if section changes
+    if (state.examType === 'rrb_po' && dom.examSecQuantBtn && dom.examSecReasoningBtn) {
+      if (q.section === 'reasoning') {
+        dom.examSecReasoningBtn.classList.add('active');
+        dom.examSecQuantBtn.classList.remove('active');
+        state.examCurrentSection = 'reasoning';
+      } else {
+        dom.examSecQuantBtn.classList.add('active');
+        dom.examSecReasoningBtn.classList.remove('active');
+        state.examCurrentSection = 'quant';
+      }
+    }
+
     // Update Palette active indicator
     Array.from(dom.examPaletteGrid.children).forEach((b, i) => {
       b.classList.toggle('current', i === index);
     });
 
-    dom.examQNum.textContent = `Question No. ${index + 1} of ${state.examQuestions.length}`;
+    const secLabel = q.section === 'reasoning' ? '🧠 REASONING SECTION' : '⚡ QUANTITATIVE APTITUDE';
+    dom.examQNum.innerHTML = `<span style="color: ${q.section === 'reasoning' ? '#9c27b0' : 'var(--primary)'}; font-weight:700; margin-right: 0.5rem;">[${secLabel}]</span> Question No. ${index + 1} of ${state.examQuestions.length}`;
     dom.examQContent.textContent = q.expression;
 
     // Render Options
@@ -1214,57 +1364,81 @@ document.addEventListener('DOMContentLoaded', () => {
     dom.examResultReport.style.display = 'flex';
 
     // Calculate score: +1 for correct, -0.25 for incorrect
-    let correctCount = 0;
-    let incorrectCount = 0;
-    let unattemptedCount = 0;
+    let quantCorrect = 0, quantWrong = 0, quantUnattempted = 0;
+    let reasoningCorrect = 0, reasoningWrong = 0, reasoningUnattempted = 0;
 
     state.examQuestions.forEach((q, idx) => {
+      const isReasoning = (q.section === 'reasoning');
       const ansObj = state.examAnswers[idx];
+
       if (ansObj && ansObj.selectedOpt) {
         if (ansObj.selectedOpt === q.answer) {
-          correctCount++;
+          if (isReasoning) reasoningCorrect++;
+          else quantCorrect++;
         } else {
-          incorrectCount++;
+          if (isReasoning) reasoningWrong++;
+          else quantWrong++;
         }
       } else {
-        unattemptedCount++;
+        if (isReasoning) reasoningUnattempted++;
+        else quantUnattempted++;
       }
     });
 
-    const netScore = Math.max(0, (correctCount * 1.0 - incorrectCount * 0.25)).toFixed(2);
-    const timeSpentSec = 600 - state.examTimeLeft;
+    const totalCorrect = quantCorrect + reasoningCorrect;
+    const totalWrong = quantWrong + reasoningWrong;
+    const totalUnattempted = quantUnattempted + reasoningUnattempted;
+
+    const quantNet = Math.max(0, +(quantCorrect * 1.0 - quantWrong * 0.25).toFixed(2));
+    const reasoningNet = Math.max(0, +(reasoningCorrect * 1.0 - reasoningWrong * 0.25).toFixed(2));
+    const totalNet = +(quantNet + reasoningNet).toFixed(2);
+    const maxMarks = state.examQuestions.length;
+
+    const timeSpentSec = state.examTotalTime - state.examTimeLeft;
     const mins = Math.floor(timeSpentSec / 60);
     const secs = timeSpentSec % 60;
 
-    dom.examResultReport.innerHTML = `
-      <div class="glass-panel" style="max-width: 680px; width: 100%; padding: 2.5rem 2rem;">
-        <div class="badge-ribbon">SBI / IBPS PO PRELIMS SCORECARD</div>
-        <h2 style="font-size: 2.2rem; font-weight: 800; margin: 0.5rem 0;">Net Score: <span style="color: var(--accent-cyan);">${netScore} / 15.00</span></h2>
-        <p style="color: var(--text-secondary); margin-bottom: 2rem;">Time Spent: ${mins}m ${secs}s</p>
+    const quantMins = Math.floor(state.quantTimeSec / 60);
+    const quantSecs = state.quantTimeSec % 60;
+    const reasMins = Math.floor(state.reasoningTimeSec / 60);
+    const reasSecs = state.reasoningTimeSec % 60;
 
-        <div class="summary-stats-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 2rem;">
-          <div class="summary-stat-box">
-            <span class="stat-num" style="color: var(--accent-green);">${correctCount}</span>
-            <span class="stat-desc">Correct (+${correctCount})</span>
+    // Projected to 80 marks if 40-Q mock
+    const projected80 = state.examType === 'rrb_po' ? (totalNet * 2.0).toFixed(2) : (totalNet * (80 / 15)).toFixed(2);
+
+    dom.examResultReport.innerHTML = `
+      <div class="glass-panel" style="max-width: 780px; width: 100%; padding: 2.5rem 2rem;">
+        <div class="badge-ribbon">${state.examType === 'rrb_po' ? '🌾 RRB PO (SCALE 1) OFFICIAL SCORECARD' : '🏛️ SBI / IBPS PO PRELIMS SCORECARD'}</div>
+        <h2 style="font-size: 2.2rem; font-weight: 800; margin: 0.5rem 0;">
+          Net Score: <span style="color: var(--accent-cyan);">${totalNet} / ${maxMarks}.00</span>
+          ${state.examType === 'rrb_po' ? `<span style="font-size: 1.1rem; color: var(--text-secondary); margin-left: 0.75rem;">(Projected on 80M: <strong style="color: var(--accent-green);">${projected80}/80</strong>)</span>` : ''}
+        </h2>
+        <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
+          Total Time: <strong>${mins}m ${secs}s</strong> • Quant Time: <strong>${quantMins}m ${quantSecs}s</strong> • Reasoning Time: <strong>${reasMins}m ${reasSecs}s</strong>
+        </p>
+
+        <!-- Sectional Breakdown Grid -->
+        <div class="summary-stats-grid" style="grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1.5rem;">
+          <div class="summary-stat-box" style="text-align: left; padding: 1rem 1.25rem;">
+            <div style="font-size: 0.8rem; font-weight: 700; color: var(--primary); text-transform: uppercase;">⚡ Quantitative Aptitude</div>
+            <div style="font-size: 1.5rem; font-weight: 800; font-family: var(--font-mono); margin: 0.2rem 0;">${quantNet} Marks</div>
+            <div style="font-size: 0.75rem; color: var(--text-secondary);">+${quantCorrect} Correct | -${(quantWrong * 0.25).toFixed(2)} (${quantWrong} Wrong) | ${quantUnattempted} Skipped</div>
           </div>
-          <div class="summary-stat-box">
-            <span class="stat-num" style="color: var(--accent-red);">${incorrectCount}</span>
-            <span class="stat-desc">Incorrect (-${(incorrectCount * 0.25).toFixed(2)})</span>
-          </div>
-          <div class="summary-stat-box">
-            <span class="stat-num" style="color: var(--text-muted);">${unattemptedCount}</span>
-            <span class="stat-desc">Unattempted (0)</span>
+          <div class="summary-stat-box" style="text-align: left; padding: 1rem 1.25rem;">
+            <div style="font-size: 0.8rem; font-weight: 700; color: #9c27b0; text-transform: uppercase;">🧠 Reasoning Ability</div>
+            <div style="font-size: 1.5rem; font-weight: 800; font-family: var(--font-mono); margin: 0.2rem 0;">${reasoningNet} Marks</div>
+            <div style="font-size: 0.75rem; color: var(--text-secondary);">+${reasoningCorrect} Correct | -${(reasoningWrong * 0.25).toFixed(2)} (${reasoningWrong} Wrong) | ${reasoningUnattempted} Skipped</div>
           </div>
         </div>
 
-        <div class="bank-benchmark-box" style="margin-bottom: 2rem;">
-          <div class="benchmark-title">SBI PO Prelims Quant Speed Analysis:</div>
-          <p style="color: ${netScore >= 11 ? 'var(--accent-green)' : (netScore >= 8 ? 'var(--accent-cyan)' : 'var(--accent-gold)')}; font-weight: 700;">
-            ${netScore >= 11 
-              ? '🏆 Excellent Speed & Accuracy! You comfortably cleared the Quant sectional cutoff (Cutoff is typically 8.5–10 marks in SBI PO Prelims).' 
-              : (netScore >= 8 
-                ? '⚡ Moderate Performance. You are on the border of the cutoff. Focus on eliminating negative marks.' 
-                : '⚠️ Need More Speed Drill. Practice tables, squares, and fraction reciprocals to speed up BODMAS.')}
+        <div class="bank-benchmark-box" style="margin-bottom: 2rem; border-left: 4px solid ${projected80 >= 56 ? 'var(--accent-green)' : (projected80 >= 48 ? 'var(--accent-cyan)' : 'var(--accent-gold)')}; padding-left: 1rem;">
+          <div class="benchmark-title">${state.examType === 'rrb_po' ? '🌾 RRB PO State Cutoff Diagnostics (National Avg: 56.5 / 80):' : 'SBI PO Prelims Quant Speed Analysis:'}</div>
+          <p style="color: ${projected80 >= 56 ? 'var(--accent-green)' : (projected80 >= 48 ? 'var(--accent-cyan)' : 'var(--accent-gold)')}; font-weight: 700; margin-top: 0.35rem;">
+            ${projected80 >= 56 
+              ? `🏆 OUTSTANDING! Projected Score (${projected80}/80) clears cutoffs for almost ALL major states (UP: 62.5, Raj: 60.25, Bihar: 56.75, MP: 55.25).`
+              : (projected80 >= 48 
+                ? `⚡ BORDERLINE ZONE (${projected80}/80). You clear lower-cutoff states (Maharashtra: 51.5, Gujarat: 50.0). Focus on cutting negative marks in Quadratics and Syllogisms to reach 58+ safe tier!`
+                : `⚠️ NEED ACCELERATION (${projected80}/80). Standard RRB PO cutoff requires at least 55+ marks. Drill high-speed Quadratic comparisons and Vedic tables to increase attempts.`)}
           </p>
         </div>
 
@@ -1273,6 +1447,25 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
 
     document.getElementById('exam-retry-btn').addEventListener('click', startBankExam);
+
+    // Also register session into analytics
+    const cpm = Math.round((totalCorrect / Math.max(0.1, timeSpentSec / 60)));
+    const acc = Math.round((totalCorrect / Math.max(1, totalCorrect + totalWrong)) * 100);
+    window.analyticsManager.recordSession({
+      category: state.examType === 'rrb_po' ? 'RRB PO 40-Q Mock' : 'Bank Mock Quant',
+      mode: state.examType === 'rrb_po' ? 'RRB PO Composite' : 'SBI Speed Mock',
+      difficulty: 'PO PRELIMS',
+      level: 'PO',
+      total: totalCorrect + totalWrong,
+      correct: totalCorrect,
+      durationSec: timeSpentSec,
+      cpm: cpm,
+      maxStreak: 6,
+      mistakes: [],
+      fastestTime: 1.2,
+      slowestTime: 4.8,
+      section: state.examType === 'rrb_po' ? 'all' : 'Quant'
+    });
   }
 
   dom.startExamBtn.addEventListener('click', startBankExam);
@@ -1373,6 +1566,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Populate UI elements
     const topicLabels = {
       puzzle_basics: 'Puzzle Clue Basics',
+      phrasing_traps: 'Exam Phrasing Traps',
       inequalities: 'Inequalities',
       syllogisms: 'Syllogisms',
       alphabet: 'Alphabet & EJOTY',
